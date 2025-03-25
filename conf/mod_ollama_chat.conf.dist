@@ -81,3 +81,8 @@ OllamaChat.RandomChatterBotCommentChance = 25
 #                  If a message starts with any of these prefixes, the bot will not respond.
 #     Default:     
 OllamaChat.BlacklistCommands = 
+
+# OllamaChat.MaxConcurrentQueries
+#     Description: The maximum number of concurrent API queries allowed. Use 0 for no limit.
+#     Default:     1
+OllamaChat.MaxConcurrentQueries = 1

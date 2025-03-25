@@ -1,6 +1,7 @@
 #include "mod-ollama-chat_config.h"
 #include "Config.h"
 #include "Log.h"
+#include "mod-ollama-chat_api.h"
 #include <fmt/core.h>
 #include <sstream>
 
@@ -13,6 +14,9 @@ uint32_t   g_BotReplyChance    = 10;
 uint32_t   g_MaxBotsToPick     = 2;
 std::string g_OllamaUrl        = "http://localhost:11434/api/generate";
 std::string g_OllamaModel      = "llama3.2:1b";
+
+// New configuration option: API max concurrent queries (0 means no limit)
+uint32_t   g_MaxConcurrentQueries = 0;
 
 bool       g_EnableRandomChatter             = true;
 uint32_t   g_MinRandomInterval               = 45;
@@ -96,11 +100,16 @@ void LoadOllamaChatConfig()
     g_OllamaUrl         = sConfigMgr->GetOption<std::string>("OllamaChat.Url", "http://localhost:11434/api/generate");
     g_OllamaModel       = sConfigMgr->GetOption<std::string>("OllamaChat.Model", "llama3.2:1b");
 
+    // Load new configuration option for max concurrent queries.
+    g_MaxConcurrentQueries = sConfigMgr->GetOption<uint32_t>("OllamaChat.MaxConcurrentQueries", 0);
+
     g_EnableRandomChatter             = sConfigMgr->GetOption<bool>("OllamaChat.EnableRandomChatter", true);
     g_MinRandomInterval               = sConfigMgr->GetOption<uint32_t>("OllamaChat.MinRandomInterval", 45);
     g_MaxRandomInterval               = sConfigMgr->GetOption<uint32_t>("OllamaChat.MaxRandomInterval", 180);
     g_RandomChatterRealPlayerDistance = sConfigMgr->GetOption<float>("OllamaChat.RandomChatterRealPlayerDistance", 40.0f);
     g_RandomChatterBotCommentChance   = sConfigMgr->GetOption<uint32_t>("OllamaChat.RandomChatterBotCommentChance", 25);
+    
+    g_MaxConcurrentQueries = sConfigMgr->GetOption<uint32_t>("OllamaChat.MaxConcurrentQueries", 0);
 
     g_EnableRPPersonalities = sConfigMgr->GetOption<bool>("OllamaChat.EnableRPPersonalities", false);
 
@@ -115,16 +124,18 @@ void LoadOllamaChatConfig()
         }
     }
 
+    g_queryManager.setMaxConcurrentQueries(g_MaxConcurrentQueries);
+
     LOG_INFO("server.loading",
              "[mod-ollama-chat] Config loaded: SayDistance = {}, YellDistance = {}, "
              "GeneralDistance = {}, PlayerReplyChance = {}%, BotReplyChance = {}%, MaxBotsToPick = {}, "
-             "Url = {}, Model = {}, EnableRandomChatter = {}, MinRandInt = {}, MaxRandInt = {}, RandomChatterRealPlayerDistance = {}, "
-             "RandomChatterBotCommentChance = {}. Extra blacklist commands: {}",
+             "Url = {}, Model = {}, MaxConcurrentQueries = {}, EnableRandomChatter = {}, MinRandInt = {}, MaxRandInt = {}, RandomChatterRealPlayerDistance = {}, "
+             "RandomChatterBotCommentChance = {}. MaxConcurrentQueries = {}. Extra blacklist commands: {}",
              g_SayDistance, g_YellDistance, g_GeneralDistance,
              g_PlayerReplyChance, g_BotReplyChance, g_MaxBotsToPick,
-             g_OllamaUrl, g_OllamaModel,
+             g_OllamaUrl, g_OllamaModel, g_MaxConcurrentQueries,
              g_EnableRandomChatter, g_MinRandomInterval, g_MaxRandomInterval, g_RandomChatterRealPlayerDistance,
-             g_RandomChatterBotCommentChance, extraBlacklist);
+             g_RandomChatterBotCommentChance, g_MaxConcurrentQueries, extraBlacklist);
 }
 
 // Definition of the configuration WorldScript.

@@ -15,6 +15,9 @@ extern uint32_t   g_MaxBotsToPick;
 extern std::string g_OllamaUrl;
 extern std::string g_OllamaModel;
 
+// New configuration option for API concurrent query limit.
+extern uint32_t   g_MaxConcurrentQueries;
+
 extern bool       g_EnableRandomChatter;
 extern uint32_t   g_MinRandomInterval;
 extern uint32_t   g_MaxRandomInterval;
@@ -29,7 +32,7 @@ extern std::vector<std::string> g_BlacklistCommands;
 // Loads configuration
 void LoadOllamaChatConfig();
 
-// Declaration of the WorldScript to load configuration on startup.
+// Declaration of the configuration WorldScript.
 class OllamaChatConfigWorldScript : public WorldScript
 {
 public:

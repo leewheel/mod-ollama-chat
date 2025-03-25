@@ -5,7 +5,13 @@
 #include <sstream>
 #include <nlohmann/json.hpp>
 #include <fmt/core.h>
+#include <thread>
+#include <mutex>
+#include <queue>
+#include <future>
+#include "mod-ollama-chat_api.h"
 
+// Callback for cURL write function.
 static size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* userp)
 {
     std::string* responseBuffer = static_cast<std::string*>(userp);
@@ -14,6 +20,7 @@ static size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* use
     return totalSize;
 }
 
+// Function to perform the API call.
 std::string QueryOllamaAPI(const std::string& prompt)
 {
     CURL* curl = curl_easy_init();
@@ -90,4 +97,12 @@ std::string QueryOllamaAPI(const std::string& prompt)
 
     LOG_INFO("server.loading", "Parsed bot response: {}", botReply);
     return botReply;
+}
+
+QueryManager g_queryManager;
+
+// Interface function to submit a query.
+std::future<std::string> SubmitQuery(const std::string& prompt)
+{
+    return g_queryManager.submitQuery(prompt);
 }
