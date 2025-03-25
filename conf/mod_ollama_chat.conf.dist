@@ -84,5 +84,5 @@ OllamaChat.BlacklistCommands =
 
 # OllamaChat.MaxConcurrentQueries
 #     Description: The maximum number of concurrent API queries allowed. Use 0 for no limit.
-#     Default:     1
-OllamaChat.MaxConcurrentQueries = 1
+#     Default:     0
+OllamaChat.MaxConcurrentQueries = 0

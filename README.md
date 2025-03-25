@@ -29,6 +29,10 @@
 
 ## Installation
 
+> [!IMPORTANT]
+> Prerequisite dependencies have only been verified to work on macOS Monterey 12.7.6.  
+> If you encounter any issues or resolve problems related to dependencies on your OS, please open an issue describing the problem, the solution, and your OS version. I will update the README accordingly.
+
 1. **Prerequisites:**
    - Ensure you have liyunfan1223's AzerothCore (https://github.com/liyunfan1223/azerothcore-wotlk) installation with the Player Bots (https://github.com/liyunfan1223/mod-playerbots) module enabled.
    - The module depends on:
