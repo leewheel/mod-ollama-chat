@@ -32,14 +32,10 @@
 #include "Map.h"
 #include "GridNotifiers.h"
 
-// After your #include directives, add:
+// Forward declarations for internal helper functions.
 static bool IsBotEligibleForChatChannelLocal(Player* bot, Player* player,
-    ChatChannelSourceLocal source, Channel* channel = nullptr);
+                                             ChatChannelSourceLocal source, Channel* channel = nullptr);
 static std::string GenerateBotPrompt(Player* bot, std::string playerMessage, Player* player);
-
-
-extern const std::string BLACKLIST_NON_COMBAT;
-extern const std::string BLACKLIST_COMBAT;
 
 const char* ChatChannelSourceLocalStr[] =
 {
@@ -63,18 +59,40 @@ ChatChannelSourceLocal GetChannelSourceLocal(uint32_t type)
 {
     switch (type)
     {
-        case 1:   LOG_INFO("server.loading", "Say channel");    return SRC_SAY_LOCAL;
-        case 51:  LOG_INFO("server.loading", "Party channel");  return SRC_PARTY_LOCAL;
-        case 3:   LOG_INFO("server.loading", "Raid channel");   return SRC_RAID_LOCAL;
-        case 5:   LOG_INFO("server.loading", "Guild channel");  return SRC_GUILD_LOCAL;
-        case 6:   LOG_INFO("server.loading", "Yell channel");   return SRC_YELL_LOCAL;
-        case 17:  LOG_INFO("server.loading", "Custom channel"); return SRC_GENERAL_LOCAL;
-        default:  LOG_INFO("server.loading", "Undefined channel, type: {}", type);
-                  return SRC_UNDEFINED_LOCAL;
+        case 1:
+            LOG_INFO("server.loading", "Say channel");
+            return SRC_SAY_LOCAL;
+        case 51:
+            LOG_INFO("server.loading", "Party channel");
+            return SRC_PARTY_LOCAL;
+        case 3:
+            LOG_INFO("server.loading", "Raid channel");
+            return SRC_RAID_LOCAL;
+        case 5:
+            LOG_INFO("server.loading", "Guild channel");
+            return SRC_GUILD_LOCAL;
+        case 6:
+            LOG_INFO("server.loading", "Yell channel");
+            return SRC_YELL_LOCAL;
+        case 17:
+            LOG_INFO("server.loading", "General channel");
+            return SRC_GENERAL_LOCAL;
+        default:
+            LOG_INFO("server.loading", "Undefined channel, type: {}", type);
+            return SRC_UNDEFINED_LOCAL;
     }
 }
 
-PlayerBotChatHandler::PlayerBotChatHandler() : PlayerScript("PlayerBotChatHandler") {}
+Channel* GetValidChannel(uint32_t teamId, const std::string& channelName, Player* player)
+{
+    ChannelMgr* cMgr = ChannelMgr::forTeam(static_cast<TeamId>(teamId));
+    Channel* channel = cMgr->GetChannel(channelName, player);
+    if (!channel)
+    {
+        LOG_ERROR("server.loading", "Channel '{}' not found for team {}", channelName, teamId);
+    }
+    return channel;
+}
 
 void PlayerBotChatHandler::OnPlayerChat(Player* player, uint32_t type, uint32_t lang, std::string& msg)
 {
@@ -95,19 +113,17 @@ void PlayerBotChatHandler::OnPlayerChat(Player* player, uint32_t type, uint32_t 
 }
 
 void PlayerBotChatHandler::ProcessChat(Player* player, uint32_t /*type*/, uint32_t /*lang*/,
-                     std::string& msg, ChatChannelSourceLocal sourceLocal, Channel* channel)
+                                         std::string& msg, ChatChannelSourceLocal sourceLocal, Channel* channel)
 {
-    uint32_t channelId    = channel ? channel->GetChannelId() : 0;
-    std::string chanName  = channel ? channel->GetName() : "Unknown";
+    std::string chanName = (channel != nullptr) ? channel->GetName() : "Unknown";
+    uint32_t channelId = (channel != nullptr) ? channel->GetChannelId() : 0;
     LOG_INFO("server.loading",
-             "Player {} sent msg: '{}' | Resolved Source: {} | Channel Name: {} | Channel ID: {}",
-             player->GetName(), msg,
-             ChatChannelSourceLocalStr[sourceLocal], chanName, channelId);
+             "Player {} sent msg: '{}' | Channel Name: {} | Channel ID: {}",
+             player->GetName(), msg, chanName, channelId);
 
     std::string trimmedMsg = rtrim(msg);
     for (const std::string& blacklist : g_BlacklistCommands)
     {
-        // Check if the message begins with a blacklisted command prefix
         if (trimmedMsg.find(blacklist) == 0)
         {
             LOG_INFO("server.loading", "Message starts with '{}' (blacklisted). Skipping bot responses.", blacklist);
@@ -117,11 +133,11 @@ void PlayerBotChatHandler::ProcessChat(Player* player, uint32_t /*type*/, uint32
              
     PlayerbotAI* senderAI = sPlayerbotsMgr->GetPlayerbotAI(player);
     bool senderIsBot = (senderAI && senderAI->IsBotAI());
-
+    
     std::vector<Player*> eligibleBots;
-    if (channel)
+    if (channel != nullptr)
     {
-        ChannelMgr* cMgr = ChannelMgr::forTeam(player->GetTeamId());
+        ChannelMgr* cMgr = ChannelMgr::forTeam(static_cast<TeamId>(player->GetTeamId()));
         Channel* senderChannel = cMgr->GetChannel(channel->GetName(), player);
         if (senderChannel)
         {
@@ -131,11 +147,9 @@ void PlayerBotChatHandler::ProcessChat(Player* player, uint32_t /*type*/, uint32
                 Player* candidate = itr.second;
                 if (!candidate->IsInWorld())
                     continue;
-
-                ChannelMgr* candidateCM = ChannelMgr::forTeam(candidate->GetTeamId());
+                ChannelMgr* candidateCM = ChannelMgr::forTeam(static_cast<TeamId>(candidate->GetTeamId()));
                 Channel* candidateChannel = candidateCM->GetChannel(channel->GetName(), candidate);
-                if (candidateChannel &&
-                    candidateChannel->GetChannelId() == senderChannel->GetChannelId())
+                if (candidateChannel && candidateChannel->GetChannelId() == senderChannel->GetChannelId())
                 {
                     eligibleBots.push_back(candidate);
                 }
@@ -152,16 +166,15 @@ void PlayerBotChatHandler::ProcessChat(Player* player, uint32_t /*type*/, uint32
                 eligibleBots.push_back(candidate);
         }
     }
-
+    
     std::vector<Player*> candidateBots;
     for (Player* bot : eligibleBots)
     {
         if (IsBotEligibleForChatChannelLocal(bot, player, sourceLocal, channel))
             candidateBots.push_back(bot);
     }
-
+    
     uint32_t chance = senderIsBot ? g_BotReplyChance : g_PlayerReplyChance;
-
     if (senderIsBot)
     {
         bool realPlayerNearby = false;
@@ -183,16 +196,15 @@ void PlayerBotChatHandler::ProcessChat(Player* player, uint32_t /*type*/, uint32
         if (!realPlayerNearby)
             chance = 0;
     }
-
+    
     std::vector<Player*> finalCandidates;
     std::vector<std::pair<size_t, Player*>> mentionedBots;
     for (Player* bot : candidateBots)
     {
         size_t pos = msg.find(bot->GetName());
         if (pos != std::string::npos)
-            mentionedBots.push_back({pos, bot});
+            mentionedBots.push_back({ pos, bot });
     }
-
     if (!mentionedBots.empty())
     {
         std::sort(mentionedBots.begin(), mentionedBots.end(),
@@ -220,7 +232,13 @@ void PlayerBotChatHandler::ProcessChat(Player* player, uint32_t /*type*/, uint32
                 finalCandidates.push_back(bot);
         }
     }
-
+    
+    if (finalCandidates.empty())
+    {
+        LOG_INFO("server.loading", "No eligible bots found to respond to message '{}'.", msg);
+        return;
+    }
+    
     if (finalCandidates.size() > g_MaxBotsToPick)
     {
         std::random_device rd;
@@ -229,96 +247,89 @@ void PlayerBotChatHandler::ProcessChat(Player* player, uint32_t /*type*/, uint32
         uint32_t countToPick = urand(1, g_MaxBotsToPick);
         finalCandidates.resize(countToPick);
     }
-
+    
+    uint64_t senderGuid = player->GetGUID().GetRawValue();
+    
     for (Player* bot : finalCandidates)
     {
         float distance = player->GetDistance(bot);
         LOG_INFO("server.loading", "Bot {} (distance: {}) is set to respond.", bot->GetName(), distance);
+        std::string prompt = GenerateBotPrompt(bot, msg, player);
+        uint64_t botGuid = bot->GetGUID().GetRawValue();
+        
+        std::thread([botGuid, senderGuid, prompt, sourceLocal, channelId = (channel ? channel->GetChannelId() : 0)]() {
+            try {
+                // Use the QueryManager to submit the query.
+                std::future<std::string> responseFuture = SubmitQuery(prompt);
+                std::string response = responseFuture.get();
 
-        std::string prompt  = GenerateBotPrompt(bot, msg, player);
-        uint64_t botGuid    = bot->GetGUID().GetRawValue();
-
-        std::thread([botGuid, player, prompt, type = sourceLocal, channel]()
-        {
-            Player* botPtr = ObjectAccessor::FindPlayer(ObjectGuid(botGuid));
-            if (!botPtr)
-            {
-                LOG_ERROR("server.loading", "Failed to reacquire bot from GUID {}", botGuid);
-                return;
-            }
-
-            std::string response = QueryOllamaAPI(prompt);
-            if (response.empty())
-            {
-                LOG_ERROR("server.loading", "Bot {} received empty response from Ollama API.", botPtr->GetName());
-                return;
-            }
-
-            PlayerbotAI* botAI = sPlayerbotsMgr->GetPlayerbotAI(botPtr);
-            if (!botAI)
-            {
-                LOG_ERROR("server.loading", "No PlayerbotAI found for bot {}", botPtr->GetName());
-                return;
-            }
-
-            if (channel)
-            {
-                ChatChannelId chanId = static_cast<ChatChannelId>(channel->GetChannelId());
-                botAI->SayToChannel(response, chanId);
-            }
-            else
-            {
-                switch (type)
+                // Reacquire pointers by GUID.
+                Player* botPtr = ObjectAccessor::FindPlayer(ObjectGuid(botGuid));
+                Player* senderPtr = ObjectAccessor::FindPlayer(ObjectGuid(senderGuid));
+                if (!botPtr)
                 {
-                    case SRC_GUILD_LOCAL:
-                        botAI->SayToGuild(response);
-                        break;
-                    case SRC_PARTY_LOCAL:
-                        botAI->SayToParty(response);
-                        break;
-                    case SRC_RAID_LOCAL:
-                        botAI->SayToRaid(response);
-                        break;
-                    case SRC_SAY_LOCAL:
-                        botAI->Say(response);
-                        break;
-                    case SRC_YELL_LOCAL:
-                        botAI->Yell(response);
-                        break;
-                    default:
-                        botAI->Say(response);
-                        break;
+                    LOG_ERROR("server.loading", "Failed to reacquire bot from GUID {}", botGuid);
+                    return;
                 }
+                if (!senderPtr)
+                {
+                    LOG_ERROR("server.loading", "Failed to reacquire sender from GUID {}", senderGuid);
+                    return;
+                }
+                if (response.empty())
+                {
+                    LOG_ERROR("server.loading", "Bot {} received empty response from Ollama API.", botPtr->GetName());
+                    return;
+                }
+                PlayerbotAI* botAI = sPlayerbotsMgr->GetPlayerbotAI(botPtr);
+                if (!botAI)
+                {
+                    LOG_ERROR("server.loading", "No PlayerbotAI found for bot {}", botPtr->GetName());
+                    return;
+                }
+                // Route the response.
+                if (channelId != 0)
+                {
+                    ChatChannelId chanId = static_cast<ChatChannelId>(channelId);
+                    botAI->SayToChannel(response, chanId);
+                }
+                else
+                {
+                    switch (sourceLocal)
+                    {
+                        case SRC_GUILD_LOCAL: botAI->SayToGuild(response); break;
+                        case SRC_PARTY_LOCAL: botAI->SayToParty(response); break;
+                        case SRC_RAID_LOCAL:  botAI->SayToRaid(response); break;
+                        case SRC_SAY_LOCAL:   botAI->Say(response); break;
+                        case SRC_YELL_LOCAL:  botAI->Yell(response); break;
+                        default:              botAI->Say(response); break;
+                    }
+                }
+                float respDistance = senderPtr->GetDistance(botPtr);
+                LOG_INFO("server.loading", "Bot {} (distance: {}) responded: {}", botPtr->GetName(), respDistance, response);
             }
-
-            float respDistance = player->GetDistance(botPtr);
-            LOG_INFO("server.loading",
-                     "Bot {} (distance: {}) responded: {}",
-                     botPtr->GetName(), respDistance, response);
-
+            catch (const std::exception& ex)
+            {
+                LOG_ERROR("server.loading", "Exception in bot response thread: {}", ex.what());
+            }
         }).detach();
+
     }
 }
 
-// Helper function used in ProcessChat.
-bool IsBotEligibleForChatChannelLocal(Player* bot, Player* player,
-                                      ChatChannelSourceLocal source, Channel* channel)
+static bool IsBotEligibleForChatChannelLocal(Player* bot, Player* player,
+                                             ChatChannelSourceLocal source, Channel* channel)
 {
     if (!bot || !player || bot == player)
         return false;
-
     if (bot->GetTeamId() != player->GetTeamId())
         return false;
-
     if (!sPlayerbotsMgr->GetPlayerbotAI(bot))
         return false;
-
     if (channel && !bot->IsInChannel(channel))
         return false;
-
-    bool isInParty = (player->GetGroup() && bot->GetGroup() &&
-                      (player->GetGroup() == bot->GetGroup()));
-
+    
+    bool isInParty = (player->GetGroup() && bot->GetGroup() && (player->GetGroup() == bot->GetGroup()));
     float threshold = 0.0f;
     switch (source)
     {
@@ -327,7 +338,6 @@ bool IsBotEligibleForChatChannelLocal(Player* bot, Player* player,
         case SRC_GENERAL_LOCAL:threshold = g_GeneralDistance; break;
         default:               threshold = 0.0f;              break;
     }
-
     switch (source)
     {
         case SRC_GUILD_LOCAL:
@@ -346,6 +356,8 @@ bool IsBotEligibleForChatChannelLocal(Player* bot, Player* player,
             return false;
     }
 }
+
+
 
 // Add this constant near the top of your file, after your includes:
 const std::string WOW_CHEATSHEET = R"(

@@ -19,16 +19,22 @@ std::future<std::string> QueryManager::submitQuery(const std::string& prompt) {
     std::promise<std::string> promise;
     std::future<std::string> future = promise.get_future();
 
+    bool shouldRunNow = false;
+
     {
         std::lock_guard<std::mutex> lock(mutex_);
         if (maxConcurrentQueries == 0 || currentQueries < maxConcurrentQueries) {
             ++currentQueries;
-            std::thread(&QueryManager::processQuery, this, prompt, std::move(promise)).detach();
+            shouldRunNow = true;
         } else {
-            // Enqueue the task if maximum concurrency is reached.
             taskQueue.push({ prompt, std::move(promise) });
         }
     }
+
+    if (shouldRunNow) {
+        std::thread(&QueryManager::processQuery, this, prompt, std::move(promise)).detach();
+    }
+
     return future;
 }
 

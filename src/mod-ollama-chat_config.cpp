@@ -4,6 +4,7 @@
 #include "mod-ollama-chat_api.h"
 #include <fmt/core.h>
 #include <sstream>
+#include <curl/curl.h>
 
 // Global configuration variable definitions...
 float      g_SayDistance       = 30.0f;
@@ -143,5 +144,6 @@ OllamaChatConfigWorldScript::OllamaChatConfigWorldScript() : WorldScript("Ollama
 
 void OllamaChatConfigWorldScript::OnStartup()
 {
+    curl_global_init(CURL_GLOBAL_ALL);
     LoadOllamaChatConfig();
 }

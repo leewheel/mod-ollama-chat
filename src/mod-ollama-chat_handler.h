@@ -23,7 +23,7 @@ ChatChannelSourceLocal GetChannelSourceLocal(uint32_t type);
 class PlayerBotChatHandler : public PlayerScript
 {
 public:
-    PlayerBotChatHandler();
+    PlayerBotChatHandler() : PlayerScript("PlayerBotChatHandler") {}
     void OnPlayerChat(Player* player, uint32_t type, uint32_t lang, std::string& msg) override;
     void OnPlayerChat(Player* player, uint32_t type, uint32_t lang, std::string& msg, Group* group) override;
     void OnPlayerChat(Player* player, uint32_t type, uint32_t lang, std::string& msg, Channel* channel) override;
