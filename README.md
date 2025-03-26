@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="./icon.png" alt="Ollama Chat Module" title="Ollama Chat Module Icon">
+</p>
+
 # AzerothCore + Playerbots Module: mod-ollama-chat
 
 > [!CAUTION]
