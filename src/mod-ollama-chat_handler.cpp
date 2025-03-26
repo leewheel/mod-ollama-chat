@@ -112,8 +112,7 @@ void PlayerBotChatHandler::OnPlayerChat(Player* player, uint32_t type, uint32_t 
     ProcessChat(player, type, lang, msg, sourceLocal, channel);
 }
 
-void PlayerBotChatHandler::ProcessChat(Player* player, uint32_t /*type*/, uint32_t /*lang*/,
-                                         std::string& msg, ChatChannelSourceLocal sourceLocal, Channel* channel)
+void PlayerBotChatHandler::ProcessChat(Player* player, uint32_t /*type*/, uint32_t /*lang*/, std::string& msg, ChatChannelSourceLocal sourceLocal, Channel* channel)
 {
     std::string chanName = (channel != nullptr) ? channel->GetName() : "Unknown";
     uint32_t channelId = (channel != nullptr) ? channel->GetChannelId() : 0;
@@ -357,9 +356,6 @@ static bool IsBotEligibleForChatChannelLocal(Player* bot, Player* player,
     }
 }
 
-
-
-// Add this constant near the top of your file, after your includes:
 const std::string WOW_CHEATSHEET = R"(
     World of Warcraft Comprehensive Cheat Sheet:
     ------------------------------------------------------------
@@ -427,43 +423,36 @@ const std::string WOW_CHEATSHEET = R"(
     - Incorporate class roles, terminology, lore, and in-game communication style when generating responses.
     )";
     
-    // Updated GenerateBotPrompt with the expanded cheat sheet and explicit usage instructions.
     std::string GenerateBotPrompt(Player* bot, std::string playerMessage, Player* player)
-    {
-        BotPersonalityType personality = GetBotPersonality(bot);
-        std::string personalityPrompt  = GetPersonalityPromptAddition(personality);
-        std::string botName = bot->GetName();
-        uint32_t botLevel = bot->GetLevel();
-    
+    {  
         PlayerbotAI* botAI = sPlayerbotsMgr->GetPlayerbotAI(bot);
     
-        std::string botClass  = botAI->GetChatHelper()->FormatClass(bot->getClass());
-        std::string botRace   = botAI->GetChatHelper()->FormatRace(bot->getRace());
         AreaTableEntry const* botCurrentArea = botAI->GetCurrentArea();
         AreaTableEntry const* botCurrentZone = botAI->GetCurrentZone();
-        std::string botAreaName = botCurrentArea ? botAI->GetLocalizedAreaName(botCurrentArea)
-                                                 : "UnknownArea";
-        std::string botZoneName = botCurrentZone ? botAI->GetLocalizedAreaName(botCurrentZone)
-                                                 : "UnknownZone";
-        std::string botRole = ChatHelper::FormatClass(bot, AiFactory::GetPlayerSpecTab(bot));
-        uint8_t botGenderByte = bot->getGender();
-        std::string botGender = (botGenderByte == 0 ? "Male" : "Female");
-        std::string botFaction = (bot->GetTeamId() == TEAM_ALLIANCE ? "Alliance" : "Horde");
-    
-        std::string playerName    = player->GetName();
-        uint32_t playerLevel      = player->GetLevel();
-        std::string playerClass   = botAI->GetChatHelper()->FormatClass(player->getClass());
-        std::string playerRace    = botAI->GetChatHelper()->FormatRace(player->getRace());
-        std::string playerRole    = ChatHelper::FormatClass(player, AiFactory::GetPlayerSpecTab(player));
-        uint8_t playerGenderByte  = player->getGender();
-        std::string playerGender  = (playerGenderByte == 0 ? "Male" : "Female");
-        std::string playerFaction = (player->GetTeamId() == TEAM_ALLIANCE ? "Alliance" : "Horde");
-    
-        // Additional details:
-        std::string playerGuild = (player->GetGuild() ? player->GetGuild()->GetName() : "No Guild");
-        std::string playerGroupStatus = (player->GetGroup() ? "In a group" : "Solo");
-        // Get player's gold in gold pieces
-        uint32_t playerGold = player->GetMoney() / 10000;
+
+        BotPersonalityType personality  = GetBotPersonality(bot);
+        std::string personalityPrompt   = GetPersonalityPromptAddition(personality);
+        std::string botName             = bot->GetName();
+        uint32_t botLevel               = bot->GetLevel();
+        uint8_t botGenderByte           = bot->getGender();
+        std::string botAreaName         = botCurrentArea ? botAI->GetLocalizedAreaName(botCurrentArea): "UnknownArea";
+        std::string botZoneName         = botCurrentZone ? botAI->GetLocalizedAreaName(botCurrentZone): "UnknownZone";
+        std::string botClass            = botAI->GetChatHelper()->FormatClass(bot->getClass());
+        std::string botRace             = botAI->GetChatHelper()->FormatRace(bot->getRace());
+        std::string botRole             = ChatHelper::FormatClass(bot, AiFactory::GetPlayerSpecTab(bot));
+        std::string botGender           = (botGenderByte == 0 ? "Male" : "Female");
+        std::string botFaction          = (bot->GetTeamId() == TEAM_ALLIANCE ? "Alliance" : "Horde");
+        std::string playerName          = player->GetName();
+        uint32_t playerLevel            = player->GetLevel();
+        std::string playerClass         = botAI->GetChatHelper()->FormatClass(player->getClass());
+        std::string playerRace          = botAI->GetChatHelper()->FormatRace(player->getRace());
+        std::string playerRole          = ChatHelper::FormatClass(player, AiFactory::GetPlayerSpecTab(player));
+        uint8_t playerGenderByte        = player->getGender();
+        std::string playerGender        = (playerGenderByte == 0 ? "Male" : "Female");
+        std::string playerFaction       = (player->GetTeamId() == TEAM_ALLIANCE ? "Alliance" : "Horde");
+        std::string playerGuild         = (player->GetGuild() ? player->GetGuild()->GetName() : "No Guild");
+        std::string playerGroupStatus   = (player->GetGroup() ? "In a group" : "Solo");
+        uint32_t playerGold             = player->GetMoney() / 10000;
     
         std::string extraInfo = fmt::format(
             "Bot info: Race: {}, Gender: {}, Talent Spec: {}, Faction: {}. "
@@ -472,7 +461,6 @@ const std::string WOW_CHEATSHEET = R"(
             playerRace, playerGender, playerRole, playerFaction, playerGuild, playerGroupStatus, playerGold
         );
     
-        // Instructions for using the cheat sheet:
         const std::string CHEATSHEET_USAGE =
             "IMPORTANT: Refer to the comprehensive cheat sheet above for details on WoW lore, terminology, faction capitals, class roles, and communication style. "
             "Use this reference to ensure that your response accurately reflects all expansions (Vanilla, TBC, and Wrath) and maintains authentic in-game language.";
