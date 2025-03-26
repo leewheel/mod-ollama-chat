@@ -158,7 +158,7 @@ It's advised to turn off the normal Player Bots chat in your `playerbots.conf` b
 
 ## License
 
-This module is released under the GNU GPL v2 license, consistent with AzerothCore's licensing.
+This module is released under the GNU GPL v3 license, consistent with AzerothCore's licensing.
 
 ## Contribution
 
