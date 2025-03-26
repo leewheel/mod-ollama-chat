@@ -1,11 +1,11 @@
-# AzerothCore Module: mod-ollama-chat
+# AzerothCore + Playerbots Module: mod-ollama-chat
 
 > [!CAUTION]
 > This module is very early stages and can bog down your server due to the nature of running local LLM. Please proceed with this in mind.
 
 ## Overview
 
-***mod-ollama-chat*** is an AzerothCore module that enhances the built-in Player Bots system by integrating external language model (LLM) support via the Ollama API. This module enables player bots to generate dynamic, in-character chat responses using advanced natural language processing. Bots are enriched with personality traits, random chatter triggers, and context-aware replies that mimic the language and lore of World of Warcraft.
+***mod-ollama-chat*** is an AzerothCore module that enhances the Player Bots module by integrating external language model (LLM) support via the Ollama API. This module enables player bots to generate dynamic, in-character chat responses using advanced natural language processing locally on your computer (or remotely hosted). Bots are enriched with personality traits, random chatter triggers, and context-aware replies that mimic the language and lore of World of Warcraft.
 
 ## Features
 
@@ -19,7 +19,7 @@
   The module gathers extensive context about both the bot and the interacting player—including class, race, role, faction, guild, and more—to generate prompts for the LLM. A comprehensive WoW cheat sheet is appended to every prompt to ensure the LLM replies with accurate lore, terminology, and in-character language spanning Vanilla WoW, The Burning Crusade, and Wrath of the Lich King.
 
 - **Random Chatter:**  
-  Bots periodically initiate random, environment-based chat when a real player is nearby. This feature adds an extra layer of immersion to the game world.
+  Bots can periodically initiate random, environment-based chat when a real player is nearby. This feature adds an extra layer of immersion to the game world.
 
 - **Blacklist for Playerbot Commands:**  
   A configurable blacklist prevents bots from responding to chat messages that start with common playerbot command prefixes, ensuring that administrative commands are not inadvertently processed. Additional commands can be appended via the configuration.
