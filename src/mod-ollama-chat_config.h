@@ -18,6 +18,7 @@ extern std::string g_OllamaModel;
 // New configuration option for API concurrent query limit.
 extern uint32_t   g_MaxConcurrentQueries;
 
+extern bool       g_Enable;
 extern bool       g_EnableRandomChatter;
 extern uint32_t   g_MinRandomInterval;
 extern uint32_t   g_MaxRandomInterval;
