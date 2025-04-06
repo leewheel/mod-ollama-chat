@@ -217,6 +217,8 @@ void OllamaBotRandomChatter::HandleRandomChatter()
             if (!botPtr) return;
             std::string response = QueryOllamaAPI(prompt);
             if (response.empty()) return;
+            botPtr = ObjectAccessor::FindPlayer(ObjectGuid(botGuid));
+            if (!botPtr) return;
             PlayerbotAI* botAI = sPlayerbotsMgr->GetPlayerbotAI(botPtr);
             if (!botAI) return;
             if (botPtr->GetGroup())
