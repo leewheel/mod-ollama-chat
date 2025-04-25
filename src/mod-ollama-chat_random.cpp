@@ -182,27 +182,32 @@ void OllamaBotRandomChatter::HandleRandomChatter()
         }
 
         // Check for an area to quest in.
-        for (auto const& qkv : sObjectMgr->GetQuestTemplates())
         {
-            Quest const* qt = qkv.second;
-            if (!qt) continue;
-
-            int32 qlevel = qt->GetQuestLevel();
-            int32 plevel = bot->GetLevel();
-            if (qlevel < plevel - 2 || qlevel > plevel + 2)
-                continue;
-
-            uint32 zone = qt->GetZoneOrSort();
-            if (zone && zone > 0)
+            std::vector<std::string> questAreas;
+            for (auto const& qkv : sObjectMgr->GetQuestTemplates())
             {
+                Quest const* qt = qkv.second;
+                if (!qt) continue;
+        
+                int32 qlevel = qt->GetQuestLevel();
+                int32 plevel = bot->GetLevel();
+                if (qlevel < plevel - 2 || qlevel > plevel + 2)
+                    continue;
+        
+                uint32 zone = qt->GetZoneOrSort();
+                if (zone == 0) continue;
                 if (auto const* area = sAreaTableStore.LookupEntry(zone))
                 {
-                    candidateComments.push_back(
-                        fmt::format("You might try questing around {}.",
+                    questAreas.push_back(
+                        fmt::format("Suggest you could go questing around {}.",
                                     area->area_name[LocaleConstant::LOCALE_enUS])
                     );
                 }
             }
+            if (!questAreas.empty())
+                candidateComments.push_back(
+                    questAreas[urand(0, questAreas.size() - 1)]
+                );
         }
 
         // Check for Vendor nearby
@@ -277,20 +282,21 @@ void OllamaBotRandomChatter::HandleRandomChatter()
 
         // Check for Random incomplete quest in log
         {
-            std::vector<Quest const*> active;
+            std::vector<std::string> unfinished;
             for (auto const& qs : bot->getQuestStatusMap())
             {
                 if (qs.second.Status == QUEST_STATUS_INCOMPLETE)
+                {
                     if (auto* qt = sObjectMgr->GetQuestTemplate(qs.first))
-                        active.push_back(qt);
+                        unfinished.push_back(
+                            fmt::format("Say the name of and talk about your un-finished quest '{}'.", qt->GetTitle())
+                        );
+                }
             }
-            if (!active.empty())
-            {
-                auto* q = active[urand(0, active.size() - 1)];
+            if (!unfinished.empty())
                 candidateComments.push_back(
-                    fmt::format("Say the name of and talk about your un-finished quest '{}'.", q->GetTitle())
+                    unfinished[urand(0, unfinished.size() - 1)]
                 );
-            }
         }
 
         if (!candidateComments.empty())
