@@ -21,12 +21,21 @@ extern uint32_t   g_MaxConcurrentQueries;
 
 extern bool       g_Enable;
 extern bool       g_EnableRandomChatter;
+extern bool       g_DebugEnabled;
 extern uint32_t   g_MinRandomInterval;
 extern uint32_t   g_MaxRandomInterval;
 extern float      g_RandomChatterRealPlayerDistance;
 extern uint32_t   g_RandomChatterBotCommentChance;
 
 extern bool       g_EnableRPPersonalities;
+
+extern std::string g_RandomChatterPromptTemplate;
+
+extern std::unordered_map<std::string, std::string> g_PersonalityPrompts;
+extern std::vector<std::string> g_PersonalityKeys;
+
+extern std::string g_ChatPromptTemplate;
+extern std::string g_ChatExtraInfoTemplate;
 
 // Default blacklist for playerbot commands (e.g. if a message starts with any of these, ignore it)
 extern std::vector<std::string> g_BlacklistCommands;

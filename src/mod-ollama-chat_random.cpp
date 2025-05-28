@@ -316,7 +316,7 @@ void OllamaBotRandomChatter::HandleRandomChatter()
             if (!botAI)
                 return std::string("Error, no bot AI");
 
-            BotPersonalityType personality  = GetBotPersonality(bot);
+            std::string personality         = GetBotPersonality(bot);
             std::string personalityPrompt   = GetPersonalityPromptAddition(personality);
             std::string botName             = bot->GetName();
             uint32_t botLevel               = bot->GetLevel();
@@ -332,14 +332,8 @@ void OllamaBotRandomChatter::HandleRandomChatter()
             std::string botZoneName = botCurrentZone ? botAI->GetLocalizedAreaName(botCurrentZone) : "UnknownZone";
             std::string botMapName  = bot->GetMap() ? bot->GetMap()->GetMapName() : "UnknownMap";
 
-            return fmt::format(
-                "You are a World of Warcraft player in the Wrath of the Lich King expansion. "
-                "Your name is {}. You are a level {} {}, Race: {}, Gender: {}, Talent Spec: {}, Faction: {}. "
-                "You are currently located in {}, inside the zone '{}' on map '{}'. "
-                "Your Personality is '{}'. "
-                "You glance around the world. Make an observation and make sure to reference the main subject item: {}. "
-                "Comment aloud in character with a short statement (under 15 words) using casual WoW-style slang and attitude. "
-                "Respond as a real WoW player would: sarcastic, humorous, faction-proud, or boastful.",
+            std::string prompt = fmt::format(
+                g_RandomChatterPromptTemplate,
                 botName, botLevel, botClass, botRace, botGender, botRole, botFaction,
                 botAreaName, botZoneName, botMapName,
                 personalityPrompt,
@@ -348,7 +342,10 @@ void OllamaBotRandomChatter::HandleRandomChatter()
         }();
 
 
-        LOG_INFO("server.loading", "Random Message Prompt: {} ", prompt);
+        if(g_DebugEnabled)
+        {
+            LOG_INFO("server.loading", "Random Message Prompt: {} ", prompt);
+        }
 
         uint64_t botGuid = bot->GetGUID().GetRawValue();
 
@@ -376,12 +373,18 @@ void OllamaBotRandomChatter::HandleRandomChatter()
                 std::string selectedChannel = channels[dist(gen)];
                 if (selectedChannel == "Say")
                 {
-                    LOG_INFO("server.loading", "Bot Random Chatter Say: {}", response);
+                    if(g_DebugEnabled)
+                    {
+                        LOG_INFO("server.loading", "Bot Random Chatter Say: {}", response);
+                    }
                     botAI->Say(response);
                 }
                 else if (selectedChannel == "General")
                 {
-                    LOG_INFO("server.loading", "Bot Random Chatter General: {}", response);
+                    if(g_DebugEnabled)
+                    {
+                        LOG_INFO("server.loading", "Bot Random Chatter General: {}", response);
+                    }
                     botAI->SayToChannel(response, ChatChannelId::GENERAL);
                 }
             }
