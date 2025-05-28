@@ -332,7 +332,7 @@ void OllamaBotRandomChatter::HandleRandomChatter()
             std::string botZoneName = botCurrentZone ? botAI->GetLocalizedAreaName(botCurrentZone) : "UnknownZone";
             std::string botMapName  = bot->GetMap() ? bot->GetMap()->GetMapName() : "UnknownMap";
 
-            std::string prompt = fmt::format(
+            return fmt::format(
                 g_RandomChatterPromptTemplate,
                 botName, botLevel, botClass, botRace, botGender, botRole, botFaction,
                 botAreaName, botZoneName, botMapName,
