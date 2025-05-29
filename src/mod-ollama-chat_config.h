@@ -40,6 +40,19 @@ extern std::vector<std::string> g_BlacklistCommands;
 
 extern std::string g_DefaultPersonalityPrompt;
 
+extern std::vector<std::string> g_EnvCommentCreature;
+extern std::vector<std::string> g_EnvCommentGameObject;
+extern std::vector<std::string> g_EnvCommentEquippedItem;
+extern std::vector<std::string> g_EnvCommentBagItem;
+extern std::vector<std::string> g_EnvCommentBagItemSell;
+extern std::vector<std::string> g_EnvCommentSpell;
+extern std::vector<std::string> g_EnvCommentQuestArea;
+extern std::vector<std::string> g_EnvCommentVendor;
+extern std::vector<std::string> g_EnvCommentQuestgiver;
+extern std::vector<std::string> g_EnvCommentBagSlots;
+extern std::vector<std::string> g_EnvCommentDungeon;
+extern std::vector<std::string> g_EnvCommentUnfinishedQuest;
+
 // Loads configuration
 void LoadOllamaChatConfig();
 
