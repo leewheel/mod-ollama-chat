@@ -81,5 +81,5 @@ std::string GetPersonalityPromptAddition(const std::string& personality)
     auto it = g_PersonalityPrompts.find(personality);
     if (it != g_PersonalityPrompts.end())
         return it->second;
-    return "Talk like a standard WoW player.";
+    return g_DefaultPersonalityPrompt;
 }

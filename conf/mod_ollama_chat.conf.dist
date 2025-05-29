@@ -99,6 +99,11 @@ OllamaChat.BlacklistCommands = autogear,talents,reset botAI,summon,release,reviv
 #     Default:     0
 OllamaChat.MaxConcurrentQueries = 0
 
+# OllamaChat.DefaultPersonalityPrompt
+#     Description: The fallback personality description used when a bot has no specific roleplay type assigned.
+#     Default:     Talk like a standard WoW player.
+OllamaChat.DefaultPersonalityPrompt = "Talk like a standard WoW player."
+
 # OllamaChat.RandomChatterPromptTemplate
 #     Description: The template string for random bot chatter prompts.
 #     Placeholders use {} and must match the order used in the code.
