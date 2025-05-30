@@ -29,65 +29,38 @@ uint32_t   g_RandomChatterBotCommentChance   = 25;
 
 bool       g_EnableRPPersonalities           = false;
 
+std::string g_RandomChatterPromptTemplate;
+
+std::unordered_map<std::string, std::string> g_PersonalityPrompts;
+std::vector<std::string> g_PersonalityKeys;
+
+std::string g_ChatPromptTemplate;
+std::string g_ChatExtraInfoTemplate;
+
+bool        g_DebugEnabled = false;
+
+std::string g_DefaultPersonalityPrompt;
+
 // Default blacklist commands; these are prefixes that indicate the message is a command.
 std::vector<std::string> g_BlacklistCommands = {
     ".playerbots",
     "playerbot",
-    "autogear",
-    "talents",
-    "reset botAI",
-    "summon",
-    "release",
-    "revive",
-    "leave",
-    "attack",
-    "follow",
-    "flee",
-    "stay",
-    "runaway",
-    "grind",
-    "disperse",
-    "give leader",
-    "spells",
-    "cast",
-    "quests",
-    "accept",
-    "drop",
-    "talk",
-    "talents",
-    "reset",
-    "autogear",
-    "ss ",
-    "trainer",
-    "rti ",
-    "rtsc",
-    "do",
-    "ll",
-    "e",
-    "ue",
-    "nc",
-    "open",
-    "destroy"
-    "s",
-    "b",
-    "bank",
-    "gb",
-    "u",
-    "co",
-    "ELVUI_VERSIONCHK",
-    "Asked ",
-    "DPSMate_",
-    "LibGroupTalents",
-    "BLT",
-    "oRA3",
-    "Skada",
-    "HealBot",
-    "hbComms",
-    "questie",
-    "pfQuest",
-    "DBMv4-Ver",
-    "BWVQ3",
 };
+
+// Environment random chatter message templates (populated from config).
+std::vector<std::string> g_EnvCommentCreature;
+std::vector<std::string> g_EnvCommentGameObject;
+std::vector<std::string> g_EnvCommentEquippedItem;
+std::vector<std::string> g_EnvCommentBagItem;
+std::vector<std::string> g_EnvCommentBagItemSell;
+std::vector<std::string> g_EnvCommentSpell;
+std::vector<std::string> g_EnvCommentQuestArea;
+std::vector<std::string> g_EnvCommentVendor;
+std::vector<std::string> g_EnvCommentQuestgiver;
+std::vector<std::string> g_EnvCommentBagSlots;
+std::vector<std::string> g_EnvCommentDungeon;
+std::vector<std::string> g_EnvCommentUnfinishedQuest;
+
 
 static std::vector<std::string> SplitString(const std::string& str, char delim)
 {
@@ -127,7 +100,10 @@ static void LoadBotPersonalityList()
         return;
     }    
 
-    LOG_INFO("server.loading", "[Ollama Chat] Fetching Bot Personality List into array");
+    if(g_DebugEnabled)
+    {
+        LOG_INFO("server.loading", "[Ollama Chat] Fetching Bot Personality List into array");
+    }
 
     do
     {
@@ -148,19 +124,31 @@ void LoadOllamaChatConfig()
     g_OllamaUrl         = sConfigMgr->GetOption<std::string>("OllamaChat.Url", "http://localhost:11434/api/generate");
     g_OllamaModel       = sConfigMgr->GetOption<std::string>("OllamaChat.Model", "llama3.2:1b");
 
-    // Load new configuration option for max concurrent queries.
-    g_MaxConcurrentQueries = sConfigMgr->GetOption<uint32_t>("OllamaChat.MaxConcurrentQueries", 0);
+    g_MaxConcurrentQueries            = sConfigMgr->GetOption<uint32_t>("OllamaChat.MaxConcurrentQueries", 0);
 
     g_Enable                          = sConfigMgr->GetOption<bool>("OllamaChat.Enable", true);
     g_EnableRandomChatter             = sConfigMgr->GetOption<bool>("OllamaChat.EnableRandomChatter", true);
+
+    g_DebugEnabled                    = sConfigMgr->GetOption<bool>("OllamaChat.DebugEnabled", false);
+
     g_MinRandomInterval               = sConfigMgr->GetOption<uint32_t>("OllamaChat.MinRandomInterval", 45);
     g_MaxRandomInterval               = sConfigMgr->GetOption<uint32_t>("OllamaChat.MaxRandomInterval", 180);
     g_RandomChatterRealPlayerDistance = sConfigMgr->GetOption<float>("OllamaChat.RandomChatterRealPlayerDistance", 40.0f);
     g_RandomChatterBotCommentChance   = sConfigMgr->GetOption<uint32_t>("OllamaChat.RandomChatterBotCommentChance", 25);
     
-    g_MaxConcurrentQueries = sConfigMgr->GetOption<uint32_t>("OllamaChat.MaxConcurrentQueries", 0);
+    g_MaxConcurrentQueries            = sConfigMgr->GetOption<uint32_t>("OllamaChat.MaxConcurrentQueries", 0);
 
-    g_EnableRPPersonalities = sConfigMgr->GetOption<bool>("OllamaChat.EnableRPPersonalities", false);
+    g_EnableRPPersonalities           = sConfigMgr->GetOption<bool>("OllamaChat.EnableRPPersonalities", false);
+
+    g_RandomChatterPromptTemplate     = sConfigMgr->GetOption<std::string>("OllamaChat.RandomChatterPromptTemplate", "You are a World of Warcraft player in the Wrath of the Lich King expansion. Your name is {}. You are a level {} {}, Race: {}, Gender: {}, Talent Spec: {}, Faction: {}. You are currently located in {}, inside the zone '{}' on map '{}'. Your Personality is '{}'. {} Make it a short statement (under 15 words) using casual WoW-style slang and attitude. Respond as a real WoW player would.");
+
+    g_ChatPromptTemplate              = sConfigMgr->GetOption<std::string>("OllamaChat.ChatPromptTemplate", "You are a World of Warcraft player in the Wrath of the Lich King expansion version of the game, but you are also knowledgeable about Vanilla WoW and The Burning Crusade. Make sure your responses are relevant to the game lore and context. Your character's name is {} and you are a level {} {}. Your Personality is '{}'. A level {} {} named {} said '{}' in the game chat. Reply (under 15 words) relevant to the message and context. {} Keep your responses natural and unfiltered, just like real WoW players; embrace common slang, faction pride, and rivalry. If someone jokes, joke back. If they’re rude, don’t hold back being rude to them. Show respect to high-level players but be snooty and entitled over lower levels. When giving directions, be precise, using landmarks, flight paths, and major cities for clarity. Keep responses accurate, short and to the point. Be factual about everything like your location, race, class, etc. Do not say you're in a location or are a class or race that you are not. Always prioritize sounding like a real human player.");
+    
+    g_ChatExtraInfoTemplate           = sConfigMgr->GetOption<std::string>("OllamaChat.ChatExtraInfoTemplate", "Your info: Race: {}, Gender: {}, Talent Spec: {}, Faction: {}, Guild: {}, Group: {}, Gold: {}. Other players info: Race: {}, Gender: {}, Talent Spec: {}, Faction: {}, Guild: {}, Group: {}, Gold: {}. Approximate distance between you and other player: {:.1f} yards. {}");
+
+    g_DefaultPersonalityPrompt        = sConfigMgr->GetOption<std::string>("OllamaChat.DefaultPersonalityPrompt", "Talk like a standard WoW player.");
+
+    
 
     // Load extra blacklist commands from config (comma-separated list)
     std::string extraBlacklist = sConfigMgr->GetOption<std::string>("OllamaChat.BlacklistCommands", "");
@@ -173,7 +161,64 @@ void LoadOllamaChatConfig()
         }
     }
 
+    g_PersonalityPrompts.clear();
+    g_PersonalityKeys.clear();
+
+    std::string rawPersonalities = sConfigMgr->GetOption<std::string>("OllamaChat.PersonalityPrompts", "");
+    std::istringstream iss(rawPersonalities);
+    std::string line;
+    while (std::getline(iss, line)) {
+        size_t eq = line.find('=');
+        if (eq != std::string::npos) {
+            std::string key = line.substr(0, eq);
+            std::string val = line.substr(eq+1);
+            // trim both
+            key.erase(0, key.find_first_not_of(" \t\r\n")); key.erase(key.find_last_not_of(" \t\r\n")+1);
+            val.erase(0, val.find_first_not_of(" \t\r\n")); val.erase(val.find_last_not_of(" \t\r\n")+1);
+            if (!key.empty() && !val.empty()) {
+                g_PersonalityPrompts[key] = val;
+                g_PersonalityKeys.push_back(key);
+            }
+        }
+    }
+
     g_queryManager.setMaxConcurrentQueries(g_MaxConcurrentQueries);
+
+    // Loads the environment random chatter message templates for each type.
+    // Each config option is a pipe-separated list of string templates,
+    // using {} as a placeholder for named substitutions.
+    // Helper to load a multi-line config option into a std::vector<std::string>
+    auto LoadEnvCommentVector = [](const char* key, const std::vector<std::string>& defaults = {}) -> std::vector<std::string>
+    {
+        std::string val = sConfigMgr->GetOption<std::string>(key, "");
+        std::vector<std::string> result;
+        std::istringstream iss(val);
+        std::string line;
+        while (std::getline(iss, line)) {
+            // Trim whitespace (both ends)
+            size_t start = line.find_first_not_of(" \t\r\n");
+            size_t end = line.find_last_not_of(" \t\r\n");
+            if (start != std::string::npos && end != std::string::npos)
+                result.push_back(line.substr(start, end - start + 1));
+        }
+        if (result.empty() && !defaults.empty())
+            return defaults;
+        return result;
+    };
+
+
+    g_EnvCommentCreature        = LoadEnvCommentVector("OllamaChat.EnvCommentCreature", { "You spot a creature named '{}'." });
+    g_EnvCommentGameObject      = LoadEnvCommentVector("OllamaChat.EnvCommentGameObject", { "You see {} nearby." });
+    g_EnvCommentEquippedItem    = LoadEnvCommentVector("OllamaChat.EnvCommentEquippedItem", { "Talk about your equipped item {}." });
+    g_EnvCommentBagItem         = LoadEnvCommentVector("OllamaChat.EnvCommentBagItem", { "You notice a {} in your bag." });
+    g_EnvCommentBagItemSell     = LoadEnvCommentVector("OllamaChat.EnvCommentBagItemSell", { "You are trying persuasively to sell {} of this item {}." });
+    g_EnvCommentSpell           = LoadEnvCommentVector("OllamaChat.EnvCommentSpell", { "Talk about use cases or strategies for your spell '{}'." });
+    g_EnvCommentQuestArea       = LoadEnvCommentVector("OllamaChat.EnvCommentQuestArea", { "Suggest you could go questing around {}." });
+    g_EnvCommentVendor          = LoadEnvCommentVector("OllamaChat.EnvCommentVendor", { "You spot {} selling wares nearby." });
+    g_EnvCommentQuestgiver      = LoadEnvCommentVector("OllamaChat.EnvCommentQuestgiver", { "{} looks like they have {} quests for anyone brave enough." });
+    g_EnvCommentBagSlots        = LoadEnvCommentVector("OllamaChat.EnvCommentBagSlots", { "You have {} free bag slots left." });
+    g_EnvCommentDungeon         = LoadEnvCommentVector("OllamaChat.EnvCommentDungeon", { "You're in a Dungeon instance named '{}' talk about the Dungeon or one of its Bosses." });
+    g_EnvCommentUnfinishedQuest = LoadEnvCommentVector("OllamaChat.EnvCommentUnfinishedQuest", { "Say the name of and talk about your un-finished quest '{}'." });
 
     LOG_INFO("server.loading",
              "[mod-ollama-chat] Config loaded: Enabled = {}, SayDistance = {}, YellDistance = {}, "
