@@ -30,8 +30,6 @@ uint32_t   g_RandomChatterBotCommentChance   = 25;
 
 bool       g_EnableRPPersonalities           = false;
 
-std::string g_PersonalityConfPath = "../etc/modules/mod_ollama_chat.conf";
-
 std::string g_RandomChatterPromptTemplate;
 
 std::unordered_map<uint64_t, std::string> g_BotPersonalityList;
@@ -181,8 +179,6 @@ void LoadOllamaChatConfig()
     g_MaxConcurrentQueries            = sConfigMgr->GetOption<uint32_t>("OllamaChat.MaxConcurrentQueries", 0);
 
     g_EnableRPPersonalities           = sConfigMgr->GetOption<bool>("OllamaChat.EnableRPPersonalities", false);
-
-    g_PersonalityConfPath             = sConfigMgr->GetOption<std::string>("OllamaChat.PersonalityConfPath", "../etc/modules/mod_ollama_chat.conf");
 
     g_RandomChatterPromptTemplate     = sConfigMgr->GetOption<std::string>("OllamaChat.RandomChatterPromptTemplate", "You are a World of Warcraft player in the Wrath of the Lich King expansion. Your name is {}. You are a level {} {}, Race: {}, Gender: {}, Talent Spec: {}, Faction: {}. You are currently located in {}, inside the zone '{}' on map '{}'. Your Personality is '{}'. {} Make it a short statement (under 15 words) using casual WoW-style slang and attitude. Respond as a real WoW player would.");
 
