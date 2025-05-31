@@ -5,6 +5,8 @@
 #include <fmt/core.h>
 #include <sstream>
 #include <curl/curl.h>
+#include <fstream>
+
 
 // Global configuration variable definitions...
 float      g_SayDistance       = 30.0f;
@@ -15,7 +17,6 @@ uint32_t   g_BotReplyChance    = 10;
 uint32_t   g_MaxBotsToPick     = 2;
 std::string g_OllamaUrl        = "http://localhost:11434/api/generate";
 std::string g_OllamaModel      = "llama3.2:1b";
-std::unordered_map<uint64_t, uint32> botPersonalityList;
 
 // New configuration option: API max concurrent queries (0 means no limit)
 uint32_t   g_MaxConcurrentQueries = 0;
@@ -31,6 +32,7 @@ bool       g_EnableRPPersonalities           = false;
 
 std::string g_RandomChatterPromptTemplate;
 
+std::unordered_map<uint64_t, std::string> g_BotPersonalityList;
 std::unordered_map<std::string, std::string> g_PersonalityPrompts;
 std::vector<std::string> g_PersonalityKeys;
 
@@ -107,10 +109,48 @@ static void LoadBotPersonalityList()
 
     do
     {
-        uint32 personalityBotGUID = result->Fetch()[0].Get<uint64_t>();
-        uint32 personalityBotType = result->Fetch()[1].Get<uint32>();
-        botPersonalityList[personalityBotGUID] = personalityBotType;
+        uint64_t personalityBotGUID = result->Fetch()[0].Get<uint64_t>();
+        std::string personalityKey = result->Fetch()[1].Get<std::string>();
+        g_BotPersonalityList[personalityBotGUID] = personalityKey;
     } while (result->NextRow());
+}
+
+std::string GetMultiLineConfigValue(const std::string& configFilePath, const std::string& key)
+{
+    std::ifstream infile(configFilePath);
+    if (!infile) return "";
+
+    std::string line;
+    std::string value;
+    bool foundKey = false;
+    while (std::getline(infile, line))
+    {
+        std::string trimmed = line;
+        trimmed.erase(0, trimmed.find_first_not_of(" \t\r\n"));
+        if (trimmed.empty() || trimmed[0] == '#')
+            continue;
+        size_t pos = trimmed.find('=');
+        if (!foundKey && pos != std::string::npos) {
+            std::string possibleKey = trimmed.substr(0, pos);
+            possibleKey.erase(possibleKey.find_last_not_of(" \t\r\n") + 1);
+            if (possibleKey == key) {
+                foundKey = true;
+                std::string afterEq = trimmed.substr(pos + 1);
+                afterEq.erase(0, afterEq.find_first_not_of(" \t\r\n"));
+                value += afterEq;
+                continue;
+            }
+        }
+        else if (foundKey) {
+            // New config key or section
+            if (trimmed.find('=') != std::string::npos && trimmed.find('[') == std::string::npos)
+                break;
+            if (!value.empty()) value += "\n";
+            value += trimmed;
+        }
+    }
+
+    return value;
 }
 
 void LoadOllamaChatConfig()
@@ -149,7 +189,6 @@ void LoadOllamaChatConfig()
     g_DefaultPersonalityPrompt        = sConfigMgr->GetOption<std::string>("OllamaChat.DefaultPersonalityPrompt", "Talk like a standard WoW player.");
 
     
-
     // Load extra blacklist commands from config (comma-separated list)
     std::string extraBlacklist = sConfigMgr->GetOption<std::string>("OllamaChat.BlacklistCommands", "");
     if (!extraBlacklist.empty())
@@ -164,23 +203,7 @@ void LoadOllamaChatConfig()
     g_PersonalityPrompts.clear();
     g_PersonalityKeys.clear();
 
-    std::string rawPersonalities = sConfigMgr->GetOption<std::string>("OllamaChat.PersonalityPrompts", "");
-    std::istringstream iss(rawPersonalities);
-    std::string line;
-    while (std::getline(iss, line)) {
-        size_t eq = line.find('=');
-        if (eq != std::string::npos) {
-            std::string key = line.substr(0, eq);
-            std::string val = line.substr(eq+1);
-            // trim both
-            key.erase(0, key.find_first_not_of(" \t\r\n")); key.erase(key.find_last_not_of(" \t\r\n")+1);
-            val.erase(0, val.find_first_not_of(" \t\r\n")); val.erase(val.find_last_not_of(" \t\r\n")+1);
-            if (!key.empty() && !val.empty()) {
-                g_PersonalityPrompts[key] = val;
-                g_PersonalityKeys.push_back(key);
-            }
-        }
-    }
+    LoadPersonalityTemplatesFromDB();
 
     g_queryManager.setMaxConcurrentQueries(g_MaxConcurrentQueries);
 
@@ -231,6 +254,29 @@ void LoadOllamaChatConfig()
              g_EnableRandomChatter, g_MinRandomInterval, g_MaxRandomInterval, g_RandomChatterRealPlayerDistance,
              g_RandomChatterBotCommentChance, g_MaxConcurrentQueries, extraBlacklist);
 }
+
+void LoadPersonalityTemplatesFromDB()
+{
+    g_PersonalityPrompts.clear();
+    g_PersonalityKeys.clear();
+
+    QueryResult result = CharacterDatabase.Query("SELECT `key`, `prompt` FROM `mod_ollama_chat_personality_templates`");
+    if (!result)
+    {
+        LOG_ERROR("server.loading", "[Ollama Chat] No personality templates found in the database!");
+        return;
+    }
+
+    do
+    {
+        std::string key = (*result)[0].Get<std::string>();
+        std::string prompt = (*result)[1].Get<std::string>();
+        g_PersonalityPrompts[key] = prompt;
+        g_PersonalityKeys.push_back(key);
+        LOG_INFO("server.loading", "Loaded personality key: '{}' value: '{}'", key, prompt);
+    } while (result->NextRow());
+}
+
 
 // Definition of the configuration WorldScript.
 OllamaChatConfigWorldScript::OllamaChatConfigWorldScript() : WorldScript("OllamaChatConfigWorldScript") { }

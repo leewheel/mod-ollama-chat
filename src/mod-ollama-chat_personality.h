@@ -7,9 +7,6 @@
 
 class Player; // forward declaration
 
-// All bot personalities are now referenced as std::string keys (case-sensitive),
-// and must match those defined in the OllamaChat.PersonalityPrompts config.
-//
 // Returns the personality key (as a string) assigned to the given bot.
 // Will randomly assign from the loaded config if not yet set.
 std::string GetBotPersonality(Player* bot);

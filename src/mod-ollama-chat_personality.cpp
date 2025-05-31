@@ -6,17 +6,13 @@
 #include <random>
 
 // Internal personality map
-static std::unordered_map<uint64_t, std::string> botPersonalities;
-
-extern bool g_EnableRPPersonalities;
-
 std::string GetBotPersonality(Player* bot)
 {
     uint64_t botGuid = bot->GetGUID().GetRawValue();
 
     // If personality already assigned, return it
-    auto it = botPersonalities.find(botGuid);
-    if (it != botPersonalities.end())
+    auto it = g_BotPersonalityList.find(botGuid);
+    if (it != g_BotPersonalityList.end())
     {
         if(g_DebugEnabled)
         {
@@ -28,22 +24,23 @@ std::string GetBotPersonality(Player* bot)
     // RP personalities disabled or config not loaded
     if (!g_EnableRPPersonalities || g_PersonalityKeys.empty())
     {
-        botPersonalities[botGuid] = "default";
+        g_BotPersonalityList[botGuid] = "default";
         return "default";
     }
 
     // Try to load from database if you have persistence
-    if (botPersonalityList.find(botGuid) != botPersonalityList.end())
+    if (g_BotPersonalityList.find(botGuid) != g_BotPersonalityList.end())
     {
         // DB stores string keys now
-        uint32_t dbIdx = botPersonalityList[botGuid];
-        std::string dbPersonality;
-        if (dbIdx < g_PersonalityKeys.size())
-            dbPersonality = g_PersonalityKeys[dbIdx];
-        else
-            dbPersonality = "default";
+        std::string dbPersonality = g_BotPersonalityList[botGuid];
 
-        botPersonalities[botGuid] = dbPersonality;
+        if (dbPersonality.empty())
+        {
+            dbPersonality = "default";
+        }
+
+        g_BotPersonalityList[botGuid] = dbPersonality;
+
         if(g_DebugEnabled)
         {
             LOG_INFO("server.loading", "Using database personality '{}' for bot {}", dbPersonality, bot->GetName());
@@ -54,7 +51,7 @@ std::string GetBotPersonality(Player* bot)
     // Otherwise, assign randomly from config
     uint32 newIdx = urand(0, g_PersonalityKeys.size() - 1);
     std::string chosenPersonality = g_PersonalityKeys[newIdx];
-    botPersonalities[botGuid] = chosenPersonality;
+    g_BotPersonalityList[botGuid] = chosenPersonality;
 
     // Save to database if schema supports string (recommend TEXT or VARCHAR column for personality)
     QueryResult tableExists = CharacterDatabase.Query(
