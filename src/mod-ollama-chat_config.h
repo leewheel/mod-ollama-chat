@@ -14,7 +14,6 @@ extern uint32_t   g_BotReplyChance;
 extern uint32_t   g_MaxBotsToPick;
 extern std::string g_OllamaUrl;
 extern std::string g_OllamaModel;
-extern std::unordered_map<uint64_t, uint32> botPersonalityList; // New for database personalities
 
 extern uint32_t   g_MaxConcurrentQueries;
 
@@ -28,8 +27,11 @@ extern uint32_t   g_RandomChatterBotCommentChance;
 
 extern bool       g_EnableRPPersonalities;
 
+extern std::string g_PersonalityConfPath;
+
 extern std::string g_RandomChatterPromptTemplate;
 
+extern std::unordered_map<uint64_t, std::string> g_BotPersonalityList;
 extern std::unordered_map<std::string, std::string> g_PersonalityPrompts;
 extern std::vector<std::string> g_PersonalityKeys;
 
@@ -55,6 +57,9 @@ extern std::vector<std::string> g_EnvCommentUnfinishedQuest;
 
 // Loads configuration
 void LoadOllamaChatConfig();
+
+void LoadPersonalityTemplatesFromDB();
+
 
 // Declaration of the configuration WorldScript.
 class OllamaChatConfigWorldScript : public WorldScript

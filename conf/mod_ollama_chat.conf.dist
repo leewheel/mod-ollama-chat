@@ -78,6 +78,14 @@ OllamaChat.MaxRandomInterval = 180
 #     Default:     0 (false)
 OllamaChat.EnableRPPersonalities = 0
 
+# OllamaChat.PersonalityConfPath
+#     Description: The full or relative path to the OllamaChat module's personality configuration file.
+#                  This file contains the definitions for all bot personality prompt templates, one per line.
+#                  Use a path relative to the worldserver binary (e.g., ../etc/modules/mod_ollama_chat.conf).
+#     Example:     OllamaChat.PersonalityConfPath = "../etc/modules/mod_ollama_chat.conf"
+#     Default:     ../etc/modules/mod_ollama_chat.conf
+OllamaChat.PersonalityConfPath = "../etc/modules/mod_ollama_chat.conf"
+
 # OllamaChat.RandomChatterRealPlayerDistance
 #     Description: The maximum distance (in game units) a real player must be within for random bot chatter to trigger.
 #     Default:     40
