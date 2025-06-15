@@ -1,4 +1,3 @@
-#include "mod-ollama-chat_handler.h"
 #include "Log.h"
 #include "Player.h"
 #include "Chat.h"
@@ -12,9 +11,6 @@
 #include "World.h"
 #include "AiFactory.h"
 #include "ChannelMgr.h"
-#include "mod-ollama-chat_api.h"
-#include "mod-ollama-chat_personality.h"
-#include "mod-ollama-chat_config.h"
 #include <sstream>
 #include <vector>
 #include <fmt/core.h>
@@ -25,6 +21,11 @@
 #include <cctype>
 #include <chrono>
 #include <ctime>
+#include "DatabaseEnv.h"
+#include "mod-ollama-chat_handler.h"
+#include "mod-ollama-chat_api.h"
+#include "mod-ollama-chat_personality.h"
+#include "mod-ollama-chat_config.h"
 
 // For AzerothCore range checks
 #include "GridNotifiersImpl.h"
@@ -47,6 +48,12 @@ const char* ChatChannelSourceLocalStr[] =
     "Yell",
     "General"
 };
+
+std::string GetConversationEntryKey(uint64_t botGuid, uint64_t playerGuid, const std::string& playerMessage, const std::string& botReply)
+{
+    // Use a combination that guarantees uniqueness
+    return fmt::format("{}:{}:{}:{}", botGuid, playerGuid, playerMessage, botReply);
+}
 
 std::string rtrim(const std::string& s)
 {
@@ -116,6 +123,94 @@ void PlayerBotChatHandler::OnPlayerChat(Player* player, uint32_t type, uint32_t 
     ChatChannelSourceLocal sourceLocal = GetChannelSourceLocal(type);
     ProcessChat(player, type, lang, msg, sourceLocal, channel);
 }
+
+void AppendBotConversation(uint64_t botGuid, uint64_t playerGuid, const std::string& playerMessage, const std::string& botReply)
+{
+    std::lock_guard<std::mutex> lock(g_ConversationHistoryMutex);
+    auto& playerHistory = g_BotConversationHistory[botGuid][playerGuid];
+    playerHistory.push_back({ playerMessage, botReply });
+    while (playerHistory.size() > g_MaxConversationHistory)
+    {
+        playerHistory.pop_front();
+    }
+
+}
+
+void SaveBotConversationHistoryToDB()
+{
+    std::lock_guard<std::mutex> lock(g_ConversationHistoryMutex);
+
+    for (const auto& [botGuid, playerMap] : g_BotConversationHistory) {
+        for (const auto& [playerGuid, history] : playerMap) {
+            for (const auto& pair : history) {
+                const std::string& playerMessage = pair.first;
+                const std::string& botReply = pair.second;
+
+                std::string escPlayerMsg = playerMessage;
+                CharacterDatabase.EscapeString(escPlayerMsg);
+
+                std::string escBotReply = botReply;
+                CharacterDatabase.EscapeString(escBotReply);
+
+                CharacterDatabase.Execute(fmt::format(
+                    "INSERT IGNORE INTO mod_ollama_chat_history (bot_guid, player_guid, timestamp, player_message, bot_reply) "
+                    "VALUES ({}, {}, NOW(), '{}', '{}')",
+                    botGuid, playerGuid, escPlayerMsg, escBotReply));
+            }
+        }
+    }
+
+    // Cleanup: keep only the N most recent entries per bot/player pair
+    std::string cleanupQuery = R"SQL(
+        WITH ranked_history AS (
+            SELECT
+                bot_guid,
+                player_guid,
+                timestamp,
+                ROW_NUMBER() OVER (
+                    PARTITION BY bot_guid, player_guid
+                    ORDER BY timestamp DESC
+                ) as rn
+            FROM mod_ollama_chat_history
+        )
+        DELETE FROM mod_ollama_chat_history
+        WHERE (bot_guid, player_guid, timestamp) IN (
+            SELECT bot_guid, player_guid, timestamp
+            FROM ranked_history
+            WHERE rn > {}
+        );
+    )SQL";
+    CharacterDatabase.Execute(fmt::format(cleanupQuery, g_MaxConversationHistory));
+}
+
+
+std::string GetBotHistoryPrompt(uint64_t botGuid, uint64_t playerGuid)
+{
+    if(!g_EnableChatHistory)
+    {
+        return "";
+    }
+    
+    std::lock_guard<std::mutex> lock(g_ConversationHistoryMutex);
+
+    std::string result;
+    const auto botIt = g_BotConversationHistory.find(botGuid);
+    if (botIt == g_BotConversationHistory.end())
+        return result;
+    const auto playerIt = botIt->second.find(playerGuid);
+    if (playerIt == botIt->second.end())
+        return result;
+
+    Player* player = ObjectAccessor::FindPlayer(ObjectGuid(playerGuid));
+    std::string playerName = player ? player->GetName() : "The player";
+
+    for (const auto& entry : playerIt->second) {
+        result += fmt::format(g_ChatHistoryLineTemplate, playerName, entry.first, entry.second);
+    }
+
+    return result;
+}
+
 
 void PlayerBotChatHandler::ProcessChat(Player* player, uint32_t /*type*/, uint32_t /*lang*/, std::string& msg, ChatChannelSourceLocal sourceLocal, Channel* channel)
 {
@@ -276,7 +371,7 @@ void PlayerBotChatHandler::ProcessChat(Player* player, uint32_t /*type*/, uint32
         std::string prompt = GenerateBotPrompt(bot, msg, player);
         uint64_t botGuid = bot->GetGUID().GetRawValue();
         
-        std::thread([botGuid, senderGuid, prompt, sourceLocal, channelId = (channel ? channel->GetChannelId() : 0)]() {
+        std::thread([botGuid, senderGuid, prompt, sourceLocal, channelId = (channel ? channel->GetChannelId() : 0), msg]() {
             try {
                 // Use the QueryManager to submit the query.
                 std::future<std::string> responseFuture = SubmitQuery(prompt);
@@ -336,6 +431,7 @@ void PlayerBotChatHandler::ProcessChat(Player* player, uint32_t /*type*/, uint32
                         default:              botAI->Say(response); break;
                     }
                 }
+                AppendBotConversation(botGuid, senderGuid, msg, response);
                 float respDistance = senderPtr->GetDistance(botPtr);
                 if(g_DebugEnabled)
                 {
@@ -468,6 +564,11 @@ static bool IsBotEligibleForChatChannelLocal(Player* bot, Player* player,
         AreaTableEntry const* botCurrentArea = botAI->GetCurrentArea();
         AreaTableEntry const* botCurrentZone = botAI->GetCurrentZone();
 
+        uint64_t botGuid                = bot->GetGUID().GetRawValue();
+        uint64_t playerGuid             = player->GetGUID().GetRawValue();
+
+        std::string chatHistory         = GetBotHistoryPrompt(botGuid, playerGuid);
+
         std::string personality         = GetBotPersonality(bot);
         std::string personalityPrompt   = GetPersonalityPromptAddition(personality);
         std::string botName             = bot->GetName();
@@ -504,11 +605,12 @@ static bool IsBotEligibleForChatChannelLocal(Player* bot, Player* player,
             playerRace, playerGender, playerRole, playerFaction, playerGuild, playerGroupStatus, playerGold,
             playerDistance, botAreaName, botZoneName, botMapName
         );
+        
         std::string prompt = fmt::format(
             g_ChatPromptTemplate,
             botName, botLevel, botClass, personalityPrompt,
             playerLevel, playerClass, playerName, playerMessage,
-            extraInfo
+            chatHistory, extraInfo
         );
 
         return prompt;

@@ -78,13 +78,22 @@ OllamaChat.MaxRandomInterval = 180
 #     Default:     0 (false)
 OllamaChat.EnableRPPersonalities = 0
 
-# OllamaChat.PersonalityConfPath
-#     Description: The full or relative path to the OllamaChat module's personality configuration file.
-#                  This file contains the definitions for all bot personality prompt templates, one per line.
-#                  Use a path relative to the worldserver binary (e.g., ../etc/modules/mod_ollama_chat.conf).
-#     Example:     OllamaChat.PersonalityConfPath = "../etc/modules/mod_ollama_chat.conf"
-#     Default:     ../etc/modules/mod_ollama_chat.conf
-OllamaChat.PersonalityConfPath = "../etc/modules/mod_ollama_chat.conf"
+# OllamaChat.MaxConversationHistory
+#     Description: The maximum number of recent message pairs (player + bot reply) to track per bot/player combination.
+#                  This history is stored in memory and included in the LLM prompt when the same player talks to the bot again.
+#     Default:     5
+OllamaChat.MaxConversationHistory = 5
+
+# OllamaChat.ConversationHistorySaveInterval
+#     Description: The interval (in minutes) between periodic saves of conversation history from memory to the database.
+#                  Set to 0 to disable auto-saving.
+#     Default:     10
+OllamaChat.ConversationHistorySaveInterval = 10
+
+# OllamaChat.EnableChatHistory
+#     Description: Enables or disables the use of Chat History.
+#     Default:     1 (true)
+OllamaChat.EnableChatHistory = 1
 
 # OllamaChat.RandomChatterRealPlayerDistance
 #     Description: The maximum distance (in game units) a real player must be within for random bot chatter to trigger.
@@ -131,7 +140,7 @@ OllamaChat.DefaultPersonalityPrompt = "Talk like a standard WoW player."
 #       {} 12 - Main subject item or environment observation (e.g., "a murloc", "your sword", "a vendor")
 #
 #     Default: See below.
-OllamaChat.RandomChatterPromptTemplate = "You are a World of Warcraft player in the Wrath of the Lich King expansion. Your name is {}. You are a level {} {}, Race: {}, Gender: {}, Talent Spec: {}, Faction: {}. You are currently located in {}, inside the zone '{}' on map '{}'. Your Personality is '{}'. {} Make it a short statement (under 15 words) using casual WoW-style slang and attitude. Respond as a real WoW player would."
+OllamaChat.RandomChatterPromptTemplate = "You are a World of Warcraft player in the Wrath of the Lich King expansion. Your name is {}. You are a level {} {}, Race: {}, Gender: {}, Talent Spec: {}, Faction: {}. You are currently located in {}, inside the zone '{}' on map '{}'. Your Personality is '{}'. {} Make it a short statement (under 15 words) using casual WoW-style slang and attitude. Respond as a real WoW player would. IMPORTANT: Return only normal conversational replies, do NOT wrap your response in qoutes or double quotes, do not add any extra thoughts or texts or explanations, just the response itself. Do not use any special characters or formatting. Do not use any markdown or code blocks. Do not use any emojis or emoticons. Do not use any hashtags or mentions. Do not use any links or URLs. Do not use any punctuation marks other than periods, commas, and exclamation points. Do not use any abbreviations or acronyms. Do not use any slang or jargon that is not commonly used in World of Warcraft."
 
 # OllamaChat.ChatPromptTemplate
 #   Description: The main template for bot chat prompts sent to the LLM.
@@ -146,7 +155,7 @@ OllamaChat.RandomChatterPromptTemplate = "You are a World of Warcraft player in 
 #     {} 7  - Player's name
 #     {} 8  - Player's message (in-game chat)
 #     {} 9  - Extra info (see OllamaChat.ChatExtraInfoTemplate below)
-OllamaChat.ChatPromptTemplate = "You are a World of Warcraft player in the Wrath of the Lich King expansion version of the game, but you are also knowledgeable about Vanilla WoW and The Burning Crusade. Make sure your responses are relevant to the game lore and context. Your character's name is {} and you are a level {} {}. Your Personality is '{}'. A level {} {} named {} said '{}' in the game chat. Reply (under 15 words) relevant to the message and context. {} Keep your responses natural and unfiltered, just like real WoW players; embrace common slang, faction pride, and rivalry. If someone jokes, joke back. If they’re rude, don’t hold back being rude to them. Show respect to high-level players but be snooty and entitled over lower levels. When giving directions, be precise, using landmarks, flight paths, and major cities for clarity. Keep responses accurate, short and to the point. Be factual about everything like your location, race, class, etc. Do not say you're in a location or are a class or race that you are not. Always prioritize sounding like a real human player."
+OllamaChat.ChatPromptTemplate = "You are a World of Warcraft player in the Wrath of the Lich King expansion version of the game, but you are also knowledgeable about Vanilla WoW and The Burning Crusade. Make sure your responses are relevant to the game lore and context. Your character's name is {} and you are a level {} {}. Your Personality is '{}'. A level {} {} named {} said '{}' in the game chat. Reply (under 15 words) relevant to the message and context. {} Keep your responses natural and unfiltered, just like real WoW players; embrace common slang, faction pride, and rivalry. If someone jokes, joke back. If they’re rude, don’t hold back being rude to them. Show respect to high-level players but be snooty and entitled over lower levels. When giving directions, be precise, using landmarks, flight paths, and major cities for clarity. Keep responses accurate, short and to the point. Be factual about everything like your location, race, class, etc. Do not say you're in a location or are a class or race that you are not. Always prioritize sounding like a real human player. IMPORTANT: Return only normal conversational replies, do NOT wrap your response in qoutes or double quotes, do not add any extra thoughts or texts or explanations, just the response itself. Do not use any special characters or formatting. Do not use any markdown or code blocks. Do not use any emojis or emoticons. Do not use any hashtags or mentions. Do not use any links or URLs. Do not use any punctuation marks other than periods, commas, and exclamation points. Do not use any abbreviations or acronyms. Do not use any slang or jargon that is not commonly used in World of Warcraft."
 
 # OllamaChat.ChatExtraInfoTemplate
 #   Description: The context/details string about the bot and player, injected into the chat prompt as the last parameter.
@@ -171,6 +180,20 @@ OllamaChat.ChatPromptTemplate = "You are a World of Warcraft player in the Wrath
 #     {} 17 - Location info - zone
 #     {} 18 - Location info - map
 OllamaChat.ChatExtraInfoTemplate = "Your info: Race: {}, Gender: {}, Talent Spec: {}, Faction: {}, Guild: {}, Group: {}, Gold: {}. Other players info: Race: {}, Gender: {}, Talent Spec: {}, Faction: {}, Guild: {}, Group: {}, Gold: {}. Approximate distance between you and other player: {:.1f} yards. You are in the area '{}', zone '{}' and map '{}'."
+
+# OllamaChat.ChatHistoryHeaderTemplate
+#   Description: Format for header in conversation history context.
+#   Placeholders use {} in the order below:
+#     {} 1  - Player's name
+OllamaChat.ChatHistoryHeaderTemplate = "Your most recent conversations with {}. Use these as context only but reply to the new message they just sent you.\n"
+
+# OllamaChat.ChatHistoryLineTemplate
+#   Description: Format for each line in conversation history context.
+#   Placeholders use {} in the order below:
+#     {} 1  - Player's name
+#     {} 2  - Player message
+#     {} 3  - Bot reply
+OllamaChat.ChatHistoryLineTemplate = "{} said: '{}'\nYou said: '{}'\n"
 
 # OllamaChat.EnvCommentCreature
 #     Description: A pipe-separated (|) list of template messages for when any creature is spotted nearby.
