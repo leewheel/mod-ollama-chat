@@ -1,5 +1,6 @@
 #include "mod-ollama-chat_random.h"
 #include "mod-ollama-chat_config.h"
+#include "mod-ollama-chat_handler.h"
 #include "Log.h"
 #include "Player.h"
 #include "PlayerbotAI.h"
@@ -33,6 +34,16 @@ void OllamaBotRandomChatter::OnUpdate(uint32 diff)
 {
     if (!g_Enable || !g_EnableRandomChatter)
         return;
+
+    if (g_ConversationHistorySaveInterval > 0)
+    {
+        time_t now = time(nullptr);
+        if (difftime(now, g_LastHistorySaveTime) >= g_ConversationHistorySaveInterval * 60)
+        {
+            SaveBotConversationHistoryToDB();
+            g_LastHistorySaveTime = now;
+        }
+    }
 
     static uint32_t timer = 0;
     if (timer <= diff)

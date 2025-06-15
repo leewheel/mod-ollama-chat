@@ -27,7 +27,16 @@ extern uint32_t   g_RandomChatterBotCommentChance;
 
 extern bool       g_EnableRPPersonalities;
 
-extern std::string g_PersonalityConfPath;
+extern std::unordered_map<uint64_t, std::unordered_map<uint64_t, std::deque<std::pair<std::string, std::string>>>> g_BotConversationHistory;
+extern std::mutex g_ConversationHistoryMutex;
+extern uint32_t   g_MaxConversationHistory;
+extern uint32_t   g_ConversationHistorySaveInterval;
+extern time_t     g_LastHistorySaveTime;
+
+extern std::string g_ChatHistoryHeaderTemplate;
+extern std::string g_ChatHistoryLineTemplate;
+extern std::string g_ChatHistoryFooterTemplate;
+extern bool g_EnableChatHistory;
 
 extern std::string g_RandomChatterPromptTemplate;
 
