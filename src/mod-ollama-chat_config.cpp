@@ -45,6 +45,7 @@ std::string g_ChatExtraInfoTemplate;
 bool g_EnableChatHistory = true;
 std::string g_ChatHistoryHeaderTemplate;
 std::string g_ChatHistoryLineTemplate;
+std::string g_ChatHistoryFooterTemplate;
 
 bool        g_DebugEnabled = false;
 
@@ -167,14 +168,14 @@ std::string GetMultiLineConfigValue(const std::string& configFilePath, const std
 
 void LoadOllamaChatConfig()
 {
-    g_SayDistance       = sConfigMgr->GetOption<float>("OllamaChat.SayDistance", 30.0f);
-    g_YellDistance      = sConfigMgr->GetOption<float>("OllamaChat.YellDistance", 100.0f);
-    g_GeneralDistance   = sConfigMgr->GetOption<float>("OllamaChat.GeneralDistance", 600.0f);
-    g_PlayerReplyChance = sConfigMgr->GetOption<uint32_t>("OllamaChat.PlayerReplyChance", 90);
-    g_BotReplyChance    = sConfigMgr->GetOption<uint32_t>("OllamaChat.BotReplyChance", 10);
-    g_MaxBotsToPick     = sConfigMgr->GetOption<uint32_t>("OllamaChat.MaxBotsToPick", 2);
-    g_OllamaUrl         = sConfigMgr->GetOption<std::string>("OllamaChat.Url", "http://localhost:11434/api/generate");
-    g_OllamaModel       = sConfigMgr->GetOption<std::string>("OllamaChat.Model", "llama3.2:1b");
+    g_SayDistance                     = sConfigMgr->GetOption<float>("OllamaChat.SayDistance", 30.0f);
+    g_YellDistance                    = sConfigMgr->GetOption<float>("OllamaChat.YellDistance", 100.0f);
+    g_GeneralDistance                 = sConfigMgr->GetOption<float>("OllamaChat.GeneralDistance", 600.0f);
+    g_PlayerReplyChance               = sConfigMgr->GetOption<uint32_t>("OllamaChat.PlayerReplyChance", 90);
+    g_BotReplyChance                  = sConfigMgr->GetOption<uint32_t>("OllamaChat.BotReplyChance", 10);
+    g_MaxBotsToPick                   = sConfigMgr->GetOption<uint32_t>("OllamaChat.MaxBotsToPick", 2);
+    g_OllamaUrl                       = sConfigMgr->GetOption<std::string>("OllamaChat.Url", "http://localhost:11434/api/generate");
+    g_OllamaModel                     = sConfigMgr->GetOption<std::string>("OllamaChat.Model", "llama3.2:1b");
 
     g_MaxConcurrentQueries            = sConfigMgr->GetOption<uint32_t>("OllamaChat.MaxConcurrentQueries", 0);
 
@@ -196,7 +197,7 @@ void LoadOllamaChatConfig()
 
     g_ChatPromptTemplate              = sConfigMgr->GetOption<std::string>("OllamaChat.ChatPromptTemplate", "You are a World of Warcraft player in the Wrath of the Lich King expansion version of the game, but you are also knowledgeable about Vanilla WoW and The Burning Crusade. Make sure your responses are relevant to the game lore and context. Your character's name is {} and you are a level {} {}. Your Personality is '{}'. A level {} {} named {} said '{}' in the game chat. Reply (under 15 words) relevant to the message and context. {} Keep your responses natural and unfiltered, just like real WoW players; embrace common slang, faction pride, and rivalry. If someone jokes, joke back. If they’re rude, don’t hold back being rude to them. Show respect to high-level players but be snooty and entitled over lower levels. When giving directions, be precise, using landmarks, flight paths, and major cities for clarity. Keep responses accurate, short and to the point. Be factual about everything like your location, race, class, etc. Do not say you're in a location or are a class or race that you are not. Always prioritize sounding like a real human player. IMPORTANT: Return only normal conversational replies, do NOT wrap your response in qoutes or double quotes, do not add any extra thoughts or texts or explanations, just the response itself. Do not use any special characters or formatting. Do not use any markdown or code blocks. Do not use any emojis or emoticons. Do not use any hashtags or mentions. Do not use any links or URLs. Do not use any punctuation marks other than periods, commas, and exclamation points. Do not use any abbreviations or acronyms. Do not use any slang or jargon that is not commonly used in World of Warcraft.");
     
-    g_ChatExtraInfoTemplate           = sConfigMgr->GetOption<std::string>("OllamaChat.ChatExtraInfoTemplate", "Your info: Race: {}, Gender: {}, Talent Spec: {}, Faction: {}, Guild: {}, Group: {}, Gold: {}. Other players info: Race: {}, Gender: {}, Talent Spec: {}, Faction: {}, Guild: {}, Group: {}, Gold: {}. Approximate distance between you and other player: {:.1f} yards. {}");
+    g_ChatExtraInfoTemplate           = sConfigMgr->GetOption<std::string>("OllamaChat.ChatExtraInfoTemplate", "Your info: Race: {}, Gender: {}, Talent Spec: {}, Faction: {}, Guild: {}, Group: {}, Gold: {}. Other players info: Race: {}, Gender: {}, Talent Spec: {}, Faction: {}, Guild: {}, Group: {}, Gold: {}. Approximate distance between you and other player: {:.1f} yards. You are in the area '{}', zone '{}' and map '{}'. INSTRUCTIONS: Reply ONLY to the new message above. Do NOT refer to or reply to any previous conversation unless it relates to the latest message you are replying to. Do NOT add any label, commentary, explanation, or meta-text. Respond as a normal player would, under 15 words, with NO extra formatting or prefix—just the reply.");
 
     g_DefaultPersonalityPrompt        = sConfigMgr->GetOption<std::string>("OllamaChat.DefaultPersonalityPrompt", "Talk like a standard WoW player.");
 
@@ -204,7 +205,9 @@ void LoadOllamaChatConfig()
     g_ConversationHistorySaveInterval = sConfigMgr->GetOption<uint32_t>("OllamaChat.ConversationHistorySaveInterval", 10);
 
     g_ChatHistoryHeaderTemplate       = sConfigMgr->GetOption<std::string>("OllamaChat.ChatHistoryHeaderTemplate", "Your most recent conversations with {}. Use these as context only but reply to the new message they just sent you.\n");
-    g_ChatHistoryLineTemplate         = sConfigMgr->GetOption<std::string>("OllamaChat.ChatHistoryLineTemplate", "{} said: '{}'\nYou said: '{}'\n");
+    g_ChatHistoryLineTemplate         = sConfigMgr->GetOption<std::string>("OllamaChat.ChatHistoryLineTemplate", "{} said: {}\nYou said: {}\n");
+    g_ChatHistoryFooterTemplate       = sConfigMgr->GetOption<std::string>("OllamaChat.ChatHistoryFooterTemplate", "REPLY TO THIS MOST RECENT MESSAGE {}: {}.\n");
+
 
     g_EnableChatHistory               = sConfigMgr->GetOption<bool>("OllamaChat.EnableChatHistory", true);
 

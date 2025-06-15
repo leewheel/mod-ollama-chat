@@ -35,6 +35,7 @@ extern time_t     g_LastHistorySaveTime;
 
 extern std::string g_ChatHistoryHeaderTemplate;
 extern std::string g_ChatHistoryLineTemplate;
+extern std::string g_ChatHistoryFooterTemplate;
 extern bool g_EnableChatHistory;
 
 extern std::string g_RandomChatterPromptTemplate;

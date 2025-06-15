@@ -184,7 +184,7 @@ void SaveBotConversationHistoryToDB()
 }
 
 
-std::string GetBotHistoryPrompt(uint64_t botGuid, uint64_t playerGuid)
+std::string GetBotHistoryPrompt(uint64_t botGuid, uint64_t playerGuid, std::string playerMessage)
 {
     if(!g_EnableChatHistory)
     {
@@ -204,9 +204,13 @@ std::string GetBotHistoryPrompt(uint64_t botGuid, uint64_t playerGuid)
     Player* player = ObjectAccessor::FindPlayer(ObjectGuid(playerGuid));
     std::string playerName = player ? player->GetName() : "The player";
 
+    result += fmt::format(g_ChatHistoryHeaderTemplate, playerName);
+
     for (const auto& entry : playerIt->second) {
         result += fmt::format(g_ChatHistoryLineTemplate, playerName, entry.first, entry.second);
     }
+
+    result += fmt::format(g_ChatHistoryFooterTemplate, playerName, playerMessage);
 
     return result;
 }
@@ -567,8 +571,6 @@ static bool IsBotEligibleForChatChannelLocal(Player* bot, Player* player,
         uint64_t botGuid                = bot->GetGUID().GetRawValue();
         uint64_t playerGuid             = player->GetGUID().GetRawValue();
 
-        std::string chatHistory         = GetBotHistoryPrompt(botGuid, playerGuid);
-
         std::string personality         = GetBotPersonality(bot);
         std::string personalityPrompt   = GetPersonalityPromptAddition(personality);
         std::string botName             = bot->GetName();
@@ -598,6 +600,8 @@ static bool IsBotEligibleForChatChannelLocal(Player* bot, Player* player,
         std::string playerGroupStatus   = (player->GetGroup() ? "In a group" : "Solo");
         uint32_t playerGold             = player->GetMoney() / 10000;
         float playerDistance            = player->IsInWorld() && bot->IsInWorld() ? player->GetDistance(bot) : -1.0f;
+
+        std::string chatHistory         = GetBotHistoryPrompt(botGuid, playerGuid, playerMessage);
 
         std::string extraInfo = fmt::format(
             g_ChatExtraInfoTemplate,
