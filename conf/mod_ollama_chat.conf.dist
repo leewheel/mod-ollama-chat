@@ -200,7 +200,7 @@ OllamaChat.ChatHistoryLineTemplate = "{} said: {}\nYou said: {}\n"
 #   Placeholders use {} in the order below:
 #     {} 1  - Player's name
 #     {} 2  - Player message
-OllamaChat.ChatHistoryHeaderTemplate = "REPLY TO THIS MOST RECENT MESSAGE {}: {}.\n"
+OllamaChat.ChatHistoryFooterTemplate = "REPLY TO THIS MOST RECENT MESSAGE {}: {}.\n"
 
 # OllamaChat.EnvCommentCreature
 #     Description: A pipe-separated (|) list of template messages for when any creature is spotted nearby.
