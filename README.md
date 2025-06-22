@@ -79,6 +79,14 @@
 
 All configuration options for mod-ollama-chat are defined in `mod-ollama-chat.conf`. Key settings include:
 
+- **OllamaChat.Enable:**  
+  Enable or disable the module.  
+  Default: `1` (true)
+
+- **OllamaChat.DisableRepliesInCombat:**  
+  If true, bots will not reply or produce random chatter when in combat.  
+  Default: `true`
+
 - **OllamaChat.SayDistance:**  
   Maximum distance (in game units) a bot must be within to reply on a Say message.  
   Default: `30.0`

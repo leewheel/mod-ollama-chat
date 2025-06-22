@@ -9,6 +9,11 @@
 #     Default:     1 (true)
 OllamaChat.Enable = 1
 
+# OllamaChat.DisableRepliesInCombat
+#     Description: If true, bots will not reply or produce random chatter when in combat.
+#     Default:     true
+OllamaChat.DisableRepliesInCombat = true
+
 # OllamaChat.SayDistance
 #     Description: The maximum distance (in game units) a bot must be within to reply on a Say message.
 #     Default:     30.0

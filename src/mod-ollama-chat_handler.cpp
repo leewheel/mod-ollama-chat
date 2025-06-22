@@ -310,9 +310,11 @@ void PlayerBotChatHandler::ProcessChat(Player* player, uint32_t /*type*/, uint32
     std::vector<std::pair<size_t, Player*>> mentionedBots;
     for (Player* bot : candidateBots)
     {
-        size_t pos = msg.find(bot->GetName());
-        if (pos != std::string::npos)
-            mentionedBots.push_back({ pos, bot });
+        if (g_DisableRepliesInCombat && bot->IsInCombat())
+            continue;
+        uint32_t roll = urand(0, 99);
+        if (roll < chance)
+            finalCandidates.push_back(bot);
     }
     if (!mentionedBots.empty())
     {
@@ -322,7 +324,11 @@ void PlayerBotChatHandler::ProcessChat(Player* player, uint32_t /*type*/, uint32
         finalCandidates.clear();
         if (!senderIsBot)
         {
-            finalCandidates.push_back(chosenBot);
+            if (!(g_DisableRepliesInCombat && chosenBot->IsInCombat()))
+            {
+                finalCandidates.push_back(chosenBot);
+            }
+
             if(g_DebugEnabled)
             {
                 LOG_INFO("server.loading", "Non-bot player mentioned bot '{}', forcing reply.", chosenBot->GetName());
