@@ -23,6 +23,7 @@ uint32_t g_OllamaNumPredict    = 0;
 uint32_t    g_MaxConcurrentQueries = 0;
 
 bool        g_Enable                          = true;
+bool        g_DisableRepliesInCombat          = true;
 bool        g_EnableRandomChatter             = true;
 uint32_t    g_MinRandomInterval               = 45;
 uint32_t    g_MaxRandomInterval               = 180;
@@ -198,6 +199,7 @@ void LoadOllamaChatConfig()
     g_MaxConcurrentQueries            = sConfigMgr->GetOption<uint32_t>("OllamaChat.MaxConcurrentQueries", 0);
 
     g_Enable                          = sConfigMgr->GetOption<bool>("OllamaChat.Enable", true);
+    g_DisableRepliesInCombat          = sConfigMgr->GetOption<bool>("OllamaChat.DisableRepliesInCombat", true);
     g_EnableRandomChatter             = sConfigMgr->GetOption<bool>("OllamaChat.EnableRandomChatter", true);
 
     g_DebugEnabled                    = sConfigMgr->GetOption<bool>("OllamaChat.DebugEnabled", false);

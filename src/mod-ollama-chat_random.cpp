@@ -95,6 +95,11 @@ void OllamaBotRandomChatter::HandleRandomChatter()
         for (uint32_t i = 0; i < botsToProcess; ++i)
         {
             Player* bot = botsInRange[i];
+            if (g_DisableRepliesInCombat && bot->IsInCombat())
+            {
+                continue;
+            }
+            
             PlayerbotAI* ai = sPlayerbotsMgr->GetPlayerbotAI(bot);
             uint64_t guid = bot->GetGUID().GetRawValue();
 

@@ -26,6 +26,7 @@ extern std::string      g_OllamaSeed;
 extern uint32_t         g_MaxConcurrentQueries;
 
 extern bool             g_Enable;
+extern bool             g_DisableRepliesInCombat;
 extern bool             g_EnableRandomChatter;
 extern bool             g_DebugEnabled;
 extern uint32_t         g_MinRandomInterval;
