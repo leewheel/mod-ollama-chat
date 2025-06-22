@@ -137,7 +137,7 @@ All configuration options for mod-ollama-chat are defined in `mod-ollama-chat.co
 
 - **OllamaChat.NumPredict:**  
   Maximum number of tokens the model will generate in a reply. 0 disables the limit (unlimited).  
-  Default: `0`
+  Default: `40`
 
 - **OllamaChat.Stop:**  
   Comma-separated list of stop sequences. If the model generates any of these strings, output ends immediately.  
