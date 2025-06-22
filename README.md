@@ -111,6 +111,38 @@ All configuration options for mod-ollama-chat are defined in `mod-ollama-chat.co
   The model identifier for the Ollama API query.  
   Default: `llama3.2:1b`
 
+- **OllamaChat.Temperature:**  
+  Controls model creativity and randomness. Lower values (e.g., 0.2) make replies more focused and predictable; higher values (e.g., 1.0) make replies more creative and varied.  
+  Default: `0.8`
+
+- **OllamaChat.TopP:**  
+  Nucleus sampling parameter for randomness. Lower values restrict the model’s choices, higher values make responses more open and diverse.  
+  Default: `0.95`
+
+- **OllamaChat.RepeatPenalty:**  
+  Discourages the model from repeating phrases. 1.0 = off, higher values reduce repeated output.  
+  Default: `1.1`
+
+- **OllamaChat.NumCtx:**  
+  Sets the maximum context window (in tokens) for each generation. 0 uses the model’s default context size.  
+  Default: `0`
+
+- **OllamaChat.NumPredict:**  
+  Maximum number of tokens the model will generate in a reply. 0 disables the limit (unlimited).  
+  Default: `0`
+
+- **OllamaChat.Stop:**  
+  Comma-separated list of stop sequences. If the model generates any of these strings, output ends immediately.  
+  Example: `User:,Bot:` (leave empty to disable)
+
+- **OllamaChat.SystemPrompt:**  
+  Optional. System prompt to globally influence bot style, persona, or behavior for all replies.  
+  Default: *(empty)*
+
+- **OllamaChat.Seed:**  
+  Optional. Set a numeric value to make model replies deterministic and repeatable.  
+  Default: *(empty)*
+
 - **OllamaChat.EnableRandomChatter:**  
   Enable or disable random chatter from bots.  
   Default: `1` (true)
