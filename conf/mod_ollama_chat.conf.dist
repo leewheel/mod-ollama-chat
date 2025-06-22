@@ -49,6 +49,66 @@ OllamaChat.Url = http://localhost:11434/api/generate
 #     Default:     llama3.2:1b
 OllamaChat.Model = llama3.2:1b
 
+# OllamaChat.NumPredict
+#     Description: Maximum number of tokens to generate in Ollama responses.
+#     0 = unlimited (default). Only set if you want a hard cap.
+#     Default: 0
+OllamaChat.NumPredict = 0
+
+# OllamaChat.Temperature
+#     Description: Controls the "creativity" or randomness of the model’s output.
+#                  Lower values (e.g., 0.2) = more focused, repetitive, and predictable.
+#                  Higher values (e.g., 1.0) = more random, creative, or surprising.
+#                  0.8 is the Ollama default.
+#     Example:     OllamaChat.Temperature = 0.6
+#     Default:     0.8
+OllamaChat.Temperature = 0.8
+
+# OllamaChat.TopP
+#     Description: Controls nucleus sampling, another way to shape randomness.
+#                  Lower values (e.g., 0.5) = more conservative.
+#                  Higher values (up to 1.0) = more open.
+#                  0.95 is the Ollama default.
+#     Example:     OllamaChat.TopP = 0.9
+#     Default:     0.95
+OllamaChat.TopP = 0.95
+
+# OllamaChat.RepeatPenalty
+#     Description: Discourages repetition in model output.
+#                  1.0 = no penalty. Higher (e.g., 1.2) = less repetition.
+#                  1.1 is the Ollama default.
+#     Example:     OllamaChat.RepeatPenalty = 1.2
+#     Default:     1.1
+OllamaChat.RepeatPenalty = 1.1
+
+# OllamaChat.NumCtx
+#     Description: Maximum context length (in tokens) sent to the model.
+#                  0 = model default. Use a value only if you want to restrict or expand context.
+#                  Example for Llama-3 8B: 8192. For 70B: 8192/32768.
+#     Example:     OllamaChat.NumCtx = 4096
+#     Default:     0
+OllamaChat.NumCtx = 0
+
+# OllamaChat.Stop
+#     Description: Optional. Comma-separated list of string "stop sequences". If the model outputs any of these strings, it will immediately stop generating further text and return the response up to that point. Use this to prevent the model from continuing into unwanted sections, such as another user's dialogue turn in a chat application.
+#                  Example: "User:,Bot:" will stop the output if "User:" or "Bot:" appears in the response. Leave blank to disable.
+#     Example:     OllamaChat.Stop = User:,Bot:
+#     Default:     (empty)
+OllamaChat.Stop =
+
+# OllamaChat.SystemPrompt
+#     Description: Optional. Content for the "system" field sent to Ollama. Can be used to steer or "prime" the model's behavior globally.
+#                  Leave blank for no system prompt, or enter your own.
+#     Example:     OllamaChat.SystemPrompt = "Always answer as if you are a WoW quest giver."
+#     Default:     (empty)
+OllamaChat.SystemPrompt =
+
+# OllamaChat.Seed
+#     Description: Optional. Random seed for deterministic generation. Set to a number for repeatable results, or leave blank for normal random output.
+#     Example:     OllamaChat.Seed = 42
+#     Default:     (empty)
+OllamaChat.Seed =
+
 # OllamaChat.EnableRandomChatter
 #     Description: Enable or disable random chatter from AI bots when a real player is nearby.
 #     Default:     1 (true)

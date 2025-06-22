@@ -1,6 +1,6 @@
 #include "mod-ollama-chat_api.h"
-#include "Log.h"
 #include "mod-ollama-chat_config.h"
+#include "Log.h"
 #include <curl/curl.h>
 #include <sstream>
 #include <nlohmann/json.hpp>
@@ -9,7 +9,6 @@
 #include <mutex>
 #include <queue>
 #include <future>
-#include "mod-ollama-chat_api.h"
 
 // Callback for cURL write function.
 static size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* userp)
@@ -50,6 +49,30 @@ std::string QueryOllamaAPI(const std::string& prompt)
         {"model",  model},
         {"prompt", prompt}
     };
+    // Only include if set (do not send defaults if user did not set them)
+    if (g_OllamaNumPredict > 0)          requestData["num_predict"]     = g_OllamaNumPredict;
+    if (g_OllamaTemperature != 0.8f)     requestData["temperature"]     = g_OllamaTemperature;
+    if (g_OllamaTopP != 0.95f)           requestData["top_p"]           = g_OllamaTopP;
+    if (g_OllamaRepeatPenalty != 1.1f)   requestData["repeat_penalty"]  = g_OllamaRepeatPenalty;
+    if (g_OllamaNumCtx > 0)              requestData["num_ctx"]         = g_OllamaNumCtx;
+    if (!g_OllamaStop.empty()) {
+        // If comma-separated, convert to array
+        std::vector<std::string> stopSeqs;
+        std::stringstream ss(g_OllamaStop);
+        std::string item;
+        while (std::getline(ss, item, ',')) {
+            // trim whitespace
+            size_t start = item.find_first_not_of(" \t");
+            size_t end = item.find_last_not_of(" \t");
+            if (start != std::string::npos && end != std::string::npos)
+                stopSeqs.push_back(item.substr(start, end - start + 1));
+        }
+        if (!stopSeqs.empty())
+            requestData["stop"] = stopSeqs;
+    }
+    if (!g_OllamaSystemPrompt.empty())   requestData["system"]          = g_OllamaSystemPrompt;
+    if (!g_OllamaSeed.empty())           requestData["seed"]            = g_OllamaSeed;
+
     std::string requestDataStr = requestData.dump();
 
     struct curl_slist* headers = nullptr;

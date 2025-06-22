@@ -17,18 +17,25 @@ uint32_t   g_BotReplyChance    = 10;
 uint32_t   g_MaxBotsToPick     = 2;
 std::string g_OllamaUrl        = "http://localhost:11434/api/generate";
 std::string g_OllamaModel      = "llama3.2:1b";
+uint32_t g_OllamaNumPredict    = 0;
 
 // New configuration option: API max concurrent queries (0 means no limit)
-uint32_t   g_MaxConcurrentQueries = 0;
+uint32_t    g_MaxConcurrentQueries = 0;
 
-bool       g_Enable                          = true;
-bool       g_EnableRandomChatter             = true;
-uint32_t   g_MinRandomInterval               = 45;
-uint32_t   g_MaxRandomInterval               = 180;
-float      g_RandomChatterRealPlayerDistance = 40.0f;
-uint32_t   g_RandomChatterBotCommentChance   = 25;
-uint32_t   g_RandomChatterMaxBotsPerPlayer   = 2;
-
+bool        g_Enable                          = true;
+bool        g_EnableRandomChatter             = true;
+uint32_t    g_MinRandomInterval               = 45;
+uint32_t    g_MaxRandomInterval               = 180;
+float       g_RandomChatterRealPlayerDistance = 40.0f;
+uint32_t    g_RandomChatterBotCommentChance   = 25;
+uint32_t    g_RandomChatterMaxBotsPerPlayer   = 2;
+float       g_OllamaTemperature = 0.8f;
+float       g_OllamaTopP = 0.95f;
+float       g_OllamaRepeatPenalty = 1.1f;
+uint32_t    g_OllamaNumCtx = 0;
+std::string g_OllamaStop = "";
+std::string g_OllamaSystemPrompt = "";
+std::string g_OllamaSeed = "";
 
 bool       g_EnableRPPersonalities           = false;
 
@@ -178,6 +185,15 @@ void LoadOllamaChatConfig()
     g_MaxBotsToPick                   = sConfigMgr->GetOption<uint32_t>("OllamaChat.MaxBotsToPick", 2);
     g_OllamaUrl                       = sConfigMgr->GetOption<std::string>("OllamaChat.Url", "http://localhost:11434/api/generate");
     g_OllamaModel                     = sConfigMgr->GetOption<std::string>("OllamaChat.Model", "llama3.2:1b");
+    g_OllamaNumPredict                = sConfigMgr->GetOption<uint32_t>("OllamaChat.NumPredict", 0);
+    g_OllamaTemperature               = sConfigMgr->GetOption<float>("OllamaChat.Temperature", 0.8f);
+    g_OllamaTopP                      = sConfigMgr->GetOption<float>("OllamaChat.TopP", 0.95f);
+    g_OllamaRepeatPenalty             = sConfigMgr->GetOption<float>("OllamaChat.RepeatPenalty", 1.1f);
+    g_OllamaNumCtx                    = sConfigMgr->GetOption<uint32_t>("OllamaChat.NumCtx", 0);
+    g_OllamaNumPredict                = sConfigMgr->GetOption<uint32_t>("OllamaChat.NumPredict", 0);
+    g_OllamaStop                      = sConfigMgr->GetOption<std::string>("OllamaChat.Stop", "");
+    g_OllamaSystemPrompt              = sConfigMgr->GetOption<std::string>("OllamaChat.SystemPrompt", "");
+    g_OllamaSeed                      = sConfigMgr->GetOption<std::string>("OllamaChat.Seed", "");
 
     g_MaxConcurrentQueries            = sConfigMgr->GetOption<uint32_t>("OllamaChat.MaxConcurrentQueries", 0);
 
