@@ -304,18 +304,22 @@ std::vector<std::string> ChatHandler_GetGroupStatus(Player* bot)
         std::string beingAttacked = "";
         if (Unit* attacker = member->GetVictim())
         {
-            beingAttacked = " [Under Attack by " + attacker->GetName() + " (guid: " + std::to_string(attacker->GetGUID().GetCounter()) +
+            beingAttacked = " [Under Attack by " + attacker->GetName() +
                             ", Level: " + std::to_string(attacker->GetLevel()) + ", HP: " + std::to_string(attacker->GetHealth()) +
                             "/" + std::to_string(attacker->GetMaxHealth()) + ")]";
         }
+        PlayerbotAI* ai = sPlayerbotsMgr->GetPlayerbotAI(member);
+        std::string className = ai ? ai->GetChatHelper()->FormatClass(member->getClass()) : "Unknown";
+        std::string raceName = ai ? ai->GetChatHelper()->FormatRace(member->getRace()) : "Unknown";
         info.push_back(
             member->GetName() +
-            " (guid: " + std::to_string(member->GetGUID().GetCounter()) +
-            ", Level: " + std::to_string(member->GetLevel()) +
+            " (Level: " + std::to_string(member->GetLevel()) +
+            ", Class: " + className +
+            ", Race: " + raceName +
             ", HP: " + std::to_string(member->GetHealth()) + "/" + std::to_string(member->GetMaxHealth()) +
-            ", Pos: " + std::to_string(member->GetPositionX()) + " " + std::to_string(member->GetPositionY()) + " " + std::to_string(member->GetPositionZ()) +
             ", Dist: " + std::to_string(dist) + ")" + beingAttacked
         );
+
     }
     return info;
 }
@@ -335,16 +339,18 @@ std::vector<std::string> ChatHandler_GetVisiblePlayers(Player* bot, float radius
         if (!bot->IsWithinLOS(player->GetPositionX(), player->GetPositionY(), player->GetPositionZ())) continue;
         float dist = bot->GetDistance(player);
         std::string faction = (player->GetTeamId() == TEAM_ALLIANCE ? "Alliance" : "Horde");
+        PlayerbotAI* ai = sPlayerbotsMgr->GetPlayerbotAI(player);
+        std::string className = ai ? ai->GetChatHelper()->FormatClass(player->getClass()) : "Unknown";
+        std::string raceName = ai ? ai->GetChatHelper()->FormatRace(player->getRace()) : "Unknown";
         players.push_back(
             "Player: " + player->GetName() +
-            " (guid: " + std::to_string(player->GetGUID().GetCounter()) +
-            ", Level: " + std::to_string(player->GetLevel()) +
-            ", Class: " + std::to_string(player->getClass()) +
-            ", Race: " + std::to_string(player->getRace()) +
+            " (Level: " + std::to_string(player->GetLevel()) +
+            ", Class: " + className +
+            ", Race: " + raceName +
             ", Faction: " + faction +
-            ", Position: " + std::to_string(player->GetPositionX()) + " " + std::to_string(player->GetPositionY()) + " " + std::to_string(player->GetPositionZ()) +
             ", Distance: " + std::to_string(dist) + ")"
         );
+
     }
     return players;
 }
@@ -371,10 +377,8 @@ std::vector<std::string> ChatHandler_GetVisibleLocations(Player* bot, float radi
         float dist = bot->GetDistance(c);
         visible.push_back(
             type + ": " + c->GetName() +
-            " (guid: " + std::to_string(c->GetGUID().GetCounter()) +
             ", Level: " + std::to_string(c->GetLevel()) +
             ", HP: " + std::to_string(c->GetHealth()) + "/" + std::to_string(c->GetMaxHealth()) +
-            ", Position: " + std::to_string(c->GetPositionX()) + " " + std::to_string(c->GetPositionY()) + " " + std::to_string(c->GetPositionZ()) +
             ", Distance: " + std::to_string(dist) + ")"
         );
     }
@@ -387,9 +391,7 @@ std::vector<std::string> ChatHandler_GetVisibleLocations(Player* bot, float radi
         float dist = bot->GetDistance(go);
         visible.push_back(
             go->GetName() +
-            " (guid: " + std::to_string(go->GetGUID().GetCounter()) +
             ", Type: " + std::to_string(go->GetGoType()) +
-            ", Position: " + std::to_string(go->GetPositionX()) + " " + std::to_string(go->GetPositionY()) + " " + std::to_string(go->GetPositionZ()) +
             ", Distance: " + std::to_string(dist) + ")"
         );
     }
@@ -434,7 +436,6 @@ std::string ChatHandler_GetCombatSummary(Player* bot)
         if (victim)
         {
             oss << "Target: " << victim->GetName()
-                << " (guid: " << victim->GetGUID().GetCounter() << ")"
                 << ", Level: " << victim->GetLevel()
                 << ", HP: " << victim->GetHealth() << "/" << victim->GetMaxHealth();
         }
