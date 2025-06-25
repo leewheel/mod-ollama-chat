@@ -56,6 +56,7 @@ std::string g_ChatHistoryHeaderTemplate;
 std::string g_ChatHistoryLineTemplate;
 std::string g_ChatHistoryFooterTemplate;
 
+bool        g_EnableChatBotSnapshotTemplate  = false;
 std::string g_ChatBotSnapshotTemplate;
 
 bool        g_DebugEnabled = false;
@@ -229,6 +230,7 @@ void LoadOllamaChatConfig()
     g_ChatHistoryLineTemplate         = sConfigMgr->GetOption<std::string>("OllamaChat.ChatHistoryLineTemplate", "");
     g_ChatHistoryFooterTemplate       = sConfigMgr->GetOption<std::string>("OllamaChat.ChatHistoryFooterTemplate", "");
 
+    g_EnableChatBotSnapshotTemplate   = sConfigMgr->GetOption<bool>("OllamaChat.EnableChatBotSnapshotTemplate", false);
     g_ChatBotSnapshotTemplate         = sConfigMgr->GetOption<std::string>("OllamaChat.ChatBotSnapshotTemplate", "");
 
     g_EnableChatHistory               = sConfigMgr->GetOption<bool>("OllamaChat.EnableChatHistory", true);

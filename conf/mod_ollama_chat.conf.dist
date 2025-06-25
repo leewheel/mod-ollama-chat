@@ -169,6 +169,16 @@ OllamaChat.ConversationHistorySaveInterval = 10
 #     Default:     1 (true)
 OllamaChat.EnableChatHistory = 1
 
+# OllamaChat.EnableChatBotSnapshotTemplate
+#     Description: Enable or disable additional awareness context for each bot.
+#                  When enabled (1), the bot will include a snapshot of its current status and surroundings in the chat prompt.
+#                  This includes combat status, group info, known spells, active quests, line of sight objects, and nearby players.
+#                  When disabled (0), this context is not included in the chat prompt.
+#                  This is useful for bots that need to be aware of their environment and current status.
+#                  Enabling this may increase the response time and token usage of the API calls.
+#     Default:     0 (false)
+OllamaChat.EnableChatBotSnapshotTemplate = 0
+
 # OllamaChat.RandomChatterRealPlayerDistance
 #     Description: The maximum distance (in game units) a real player must be within for random bot chatter to trigger.
 #     Default:     40
@@ -200,27 +210,27 @@ OllamaChat.MaxConcurrentQueries = 0
 # OllamaChat.DefaultPersonalityPrompt
 #     Description: The fallback personality description used when a bot has no specific roleplay type assigned.
 #     Default:     Talk like a standard WoW player.
-OllamaChat.DefaultPersonalityPrompt = "Talk like a standard WoW player."
+OllamaChat.DefaultPersonalityPrompt = "Speak like a real WoW player from Wrath. Stay in character and use casual in-game tone."
 
 # OllamaChat.RandomChatterPromptTemplate
 #   Description: The template string for random bot chatter prompts.
 #   Placeholders (named): {bot_name} {bot_level} {bot_class} {bot_race} {bot_gender} {bot_role} {bot_faction} {bot_area} {bot_zone} {bot_map} {bot_personality} {environment_info}
-OllamaChat.RandomChatterPromptTemplate = "You are a World of Warcraft player in the Wrath of the Lich King expansion. Your name is {bot_name}. You are a level {bot_level} {bot_class}, Race: {bot_race}, Gender: {bot_gender}, Talent Spec: {bot_role}, Faction: {bot_faction}. You are currently located in {bot_area}, inside the zone '{bot_zone}' on map '{bot_map}'. Your Personality is '{bot_personality}'. {environment_info} Make it a short statement (under 15 words) using casual WoW-style slang and attitude. Respond as a real WoW player would. IMPORTANT: Return only normal conversational replies, do NOT wrap your response in qoutes or double quotes, do not add any extra thoughts or texts or explanations, just the response itself. Do not use any special characters or formatting. Do not use any markdown or code blocks. Do not use any emojis or emoticons. Do not use any hashtags or mentions. Do not use any links or URLs. Do not use any punctuation marks other than periods, commas, and exclamation points. Do not use any abbreviations or acronyms. Do not use any slang or jargon that is not commonly used in World of Warcraft."
+OllamaChat.RandomChatterPromptTemplate = "You are a Wrath-era WoW player. Name: {bot_name}, Level: {bot_level} {bot_class}, {bot_race} {bot_gender}, Spec: {bot_role}, Faction: {bot_faction}. Location: {bot_area}, Zone: {bot_zone}, Map: {bot_map}. Personality: {bot_personality}. {environment_info} Reply casually in under 15 words. No quotes, markdown, symbols, or emojis. Use real WoW slang. Avoid uncommon jargon or formatting."
 
 # OllamaChat.ChatPromptTemplate
 #   Description: The main template for bot chat prompts sent to the LLM.
 #   Placeholders (named): {bot_name} {bot_level} {bot_class} {bot_personality} {player_level} {player_class} {player_name} {player_message} {extra_info}
-OllamaChat.ChatPromptTemplate = "You are a World of Warcraft player in the Wrath of the Lich King expansion version of the game, but you are also knowledgeable about Vanilla WoW and The Burning Crusade. Make sure your responses are relevant to the game lore and context. Your character's name is {bot_name} and you are a level {bot_level} {bot_class}. Your Personality is '{bot_personality}'. A level {player_level} {player_class} named {player_name} said '{player_message}' in the game chat. Reply (under 15 words) relevant to the message and context. {extra_info} Keep your responses natural and unfiltered, just like real WoW players; embrace common slang, faction pride, and rivalry. If someone jokes, joke back. If they’re rude, don’t hold back being rude to them. Show respect to high-level players but be snooty and entitled over lower levels. When giving directions, be precise, using landmarks, flight paths, and major cities for clarity. Keep responses accurate, short and to the point. Be factual about everything like your location, race, class, etc. Do not say you're in a location or are a class or race that you are not. Always prioritize sounding like a real human player."
+OllamaChat.ChatPromptTemplate = "You're a Wrath-era WoW player familiar with Vanilla and TBC. Name: {bot_name}, Level: {bot_level} {bot_class}, Personality: {bot_personality}. A level {player_level} {player_class} named {player_name} said: '{player_message}'. {extra_info} Reply naturally in under 15 words. Use authentic WoW tone. Respect higher levels, mock lower ones. Be blunt if provoked. Be precise if giving directions. Never contradict your class, race, or location. Never act like a narrator—just respond like a player."
 
 # OllamaChat.ChatExtraInfoTemplate
 #   Description: The context/details string about the bot and player, injected into the chat prompt as the last parameter.
 #   Placeholders (named): {bot_race} {bot_gender} {bot_role} {bot_faction} {bot_guild} {bot_group_status} {bot_gold} {player_race} {player_gender} {player_role} {player_faction} {player_guild} {player_group_status} {player_gold} {player_distance} {bot_area} {bot_zone} {bot_map}
-OllamaChat.ChatExtraInfoTemplate = "Your info: Race: {bot_race}, Gender: {bot_gender}, Talent Spec: {bot_role}, Faction: {bot_faction}, Guild: {bot_guild}, Group: {bot_group_status}, Gold: {bot_gold}. Other players info: Race: {player_race}, Gender: {player_gender}, Talent Spec: {player_role}, Faction: {player_faction}, Guild: {player_guild}, Group: {player_group_status}, Gold: {player_gold}. Approximate distance between you and other player: {player_distance} yards. You are in the area '{bot_area}', zone '{bot_zone}' and map '{bot_map}'. INSTRUCTIONS: Reply ONLY to the new message above. Do NOT refer to or reply to any previous conversation unless it relates to the latest message you are replying to. Do NOT add any label, commentary, explanation, or meta-text. Respond as a normal player would, under 15 words, with NO extra formatting or prefix—just the reply."
+OllamaChat.ChatExtraInfoTemplate = "Your Info: {bot_race} {bot_gender}, Spec: {bot_role}, Faction: {bot_faction}, Guild: {bot_guild}, Group: {bot_group_status}, Gold: {bot_gold}. Player Info: {player_race} {player_gender}, Spec: {player_role}, Faction: {player_faction}, Guild: {player_guild}, Group: {player_group_status}, Gold: {player_gold}, Distance: {player_distance} yards. Location: {bot_area}, Zone: {bot_zone}, Map: {bot_map}. Only respond to the new message. No commentary, no meta-talk, no prefix—just the reply."
 
 # OllamaChat.ChatHistoryHeaderTemplate
 #   Description: Format for header in conversation history context.
 #   Placeholders (named): {player_name}
-OllamaChat.ChatHistoryHeaderTemplate = "Your most recent conversations with {player_name}. Use these as context only but reply to the new message they just sent you.\n"
+OllamaChat.ChatHistoryHeaderTemplate = "Recent chats with {player_name}. Use only for context. Reply to the new message."
 
 # OllamaChat.ChatHistoryLineTemplate
 #   Description: Format for each line in conversation history context.
@@ -230,12 +240,12 @@ OllamaChat.ChatHistoryLineTemplate = "{player_name} said: {player_message}\nYou 
 # OllamaChat.ChatHistoryFooterTemplate
 #   Description: Format for footer in conversation history context.
 #   Placeholders (named): {player_name} {player_message}
-OllamaChat.ChatHistoryFooterTemplate = "REPLY TO THIS MOST RECENT MESSAGE {player_name}: {player_message}.\n"
+OllamaChat.ChatHistoryFooterTemplate = "NEW MESSAGE from {player_name}: {player_message}"
 
 # OllamaChat.ChatBotSnapshotTemplate
 #   Description: The template string for the context snapshot of the bot's surroundings and status.
 #   Placeholders (named): {combat} {group} {spells} {quests} {los} {players}
-OllamaChat.ChatBotSnapshotTemplate = "CONTEXT SNAPSHOT OF YOURSELF AND YOUR SURROUNDINGS:\n{combat}\n{group}\nYour known spells:\n{spells}\nActive quests:\n{quests}\nVisible objects in line of sight:\n{los}\nVisible players in area:\n{players}\n"
+OllamaChat.ChatBotSnapshotTemplate = "CURRENT CONTEXT:\n{combat}\n{group}\nSpells:\n{spells}\nQuests:\n{quests}\nVisible Objects:\n{los}\nNearby Players:\n{players}"
 
 # OllamaChat.EnvCommentCreature
 #   Description: A pipe-separated (|) list of template messages for when any creature is spotted nearby.
