@@ -57,6 +57,7 @@ extern std::vector<std::string> g_PersonalityKeys;
 extern std::string      g_ChatPromptTemplate;
 extern std::string      g_ChatExtraInfoTemplate;
 
+extern bool             g_EnableChatBotSnapshotTemplate;
 extern std::string      g_ChatBotSnapshotTemplate;
 
 extern std::vector<std::string> g_BlacklistCommands;

@@ -325,7 +325,7 @@ std::vector<std::string> ChatHandler_GetGroupStatus(Player* bot)
 }
 
 // --- Helper: Visible players ---
-std::vector<std::string> ChatHandler_GetVisiblePlayers(Player* bot, float radius = 100.0f)
+std::vector<std::string> ChatHandler_GetVisiblePlayers(Player* bot, float radius = 40.0f)
 {
     std::vector<std::string> players;
     if (!bot || !bot->GetMap()) return players;
@@ -356,7 +356,7 @@ std::vector<std::string> ChatHandler_GetVisiblePlayers(Player* bot, float radius
 }
 
 // --- Helper: Visible locations/objects (creatures and gameobjects) ---
-std::vector<std::string> ChatHandler_GetVisibleLocations(Player* bot, float radius = 100.0f)
+std::vector<std::string> ChatHandler_GetVisibleLocations(Player* bot, float radius = 40.0f)
 {
     std::vector<std::string> visible;
     if (!bot || !bot->GetMap()) return visible;
@@ -859,7 +859,10 @@ std::string GenerateBotPrompt(Player* bot, std::string playerMessage, Player* pl
         fmt::arg("extra_info", extraInfo)
     );
 
-    prompt += GenerateBotGameStateSnapshot(bot);
+    if(g_EnableChatBotSnapshotTemplate)
+    {
+        prompt += GenerateBotGameStateSnapshot(bot);
+    }
 
     return prompt;
 }
