@@ -589,50 +589,47 @@ void PlayerBotChatHandler::ProcessChat(Player* player, uint32_t /*type*/, uint32
             chance = 0;
     }
     
-    std::vector<Player*> finalCandidates;
+        std::vector<Player*> finalCandidates;
     std::vector<std::pair<size_t, Player*>> mentionedBots;
+
     for (Player* bot : candidateBots)
     {
         if (g_DisableRepliesInCombat && bot->IsInCombat())
+        {
             continue;
-        uint32_t roll = urand(0, 99);
-        if (roll < chance)
-            finalCandidates.push_back(bot);
+        }
+        size_t pos = trimmedMsg.find(bot->GetName());
+        if (pos != std::string::npos)
+        {
+            mentionedBots.emplace_back(pos, bot);
+        }
     }
+
     if (!mentionedBots.empty())
     {
         std::sort(mentionedBots.begin(), mentionedBots.end(),
                   [](auto &a, auto &b) { return a.first < b.first; });
-        Player* chosenBot = mentionedBots.front().second;
-        finalCandidates.clear();
-        if (!senderIsBot)
+        Player* chosen = mentionedBots.front().second;
+        if (!(g_DisableRepliesInCombat && chosen->IsInCombat()))
         {
-            if (!(g_DisableRepliesInCombat && chosenBot->IsInCombat()))
-            {
-                finalCandidates.push_back(chosenBot);
-            }
-
-            if(g_DebugEnabled)
-            {
-                LOG_INFO("server.loading", "Non-bot player mentioned bot '{}', forcing reply.", chosenBot->GetName());
-            }
-        }
-        else
-        {
-            uint32_t roll = urand(0, 99);
-            if (roll < chance)
-                finalCandidates.push_back(chosenBot);
+            finalCandidates.push_back(chosen);
         }
     }
     else
     {
         for (Player* bot : candidateBots)
         {
-            uint32_t roll = urand(0, 99);
-            if (roll < chance)
+            if (g_DisableRepliesInCombat && bot->IsInCombat())
+            {
+                continue;
+            }
+            if (urand(0, 99) < chance)
+            {
                 finalCandidates.push_back(bot);
+            }
         }
     }
+
     
     if (finalCandidates.empty())
     {
