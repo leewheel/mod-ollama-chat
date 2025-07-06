@@ -44,7 +44,9 @@ void OllamaBotEventChatter::DispatchGameEvent(Player* source, std::string type, 
     if (isSourceBot && !hasNearbyRealPlayer)
     {
         if (g_DebugEnabled)
-            ;//LOG_INFO("server.loading", "[OllamaChat] Skipping bot source {} - no real players nearby", source->GetName());
+        {
+            //LOG_INFO("server.loading", "[OllamaChat] Skipping bot source {} - no real players nearby", source->GetName());
+        }
         return;
     }
 

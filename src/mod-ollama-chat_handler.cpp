@@ -501,6 +501,13 @@ static std::string GenerateBotGameStateSnapshot(Player* bot)
 
 void PlayerBotChatHandler::ProcessChat(Player* player, uint32_t /*type*/, uint32_t /*lang*/, std::string& msg, ChatChannelSourceLocal sourceLocal, Channel* channel)
 {
+    if (player == nullptr) {
+        LOG_ERROR("server.loading", "[Ollama Chat] ProcessChat: player is null");
+        return;
+    }
+    if (msg.empty()) {
+        return;
+    }
     std::string chanName = (channel != nullptr) ? channel->GetName() : "Unknown";
     uint32_t channelId = (channel != nullptr) ? channel->GetChannelId() : 0;
     if(g_DebugEnabled)
@@ -562,6 +569,10 @@ void PlayerBotChatHandler::ProcessChat(Player* player, uint32_t /*type*/, uint32
     std::vector<Player*> candidateBots;
     for (Player* bot : eligibleBots)
     {
+        if (!bot)
+        {
+            continue;
+        }
         if (IsBotEligibleForChatChannelLocal(bot, player, sourceLocal, channel))
             candidateBots.push_back(bot);
     }
@@ -594,6 +605,10 @@ void PlayerBotChatHandler::ProcessChat(Player* player, uint32_t /*type*/, uint32
 
     for (Player* bot : candidateBots)
     {
+        if (!bot)
+        {
+            continue;
+        }
         if (g_DisableRepliesInCombat && bot->IsInCombat())
         {
             continue;
@@ -658,13 +673,20 @@ void PlayerBotChatHandler::ProcessChat(Player* player, uint32_t /*type*/, uint32
         {
             LOG_INFO("server.loading", "[Ollama Chat] Bot {} (distance: {}) is set to respond.", bot->GetName(), distance);
         }
+        if (bot == nullptr) {
+            continue;
+        }
         std::string prompt = GenerateBotPrompt(bot, msg, player);
         uint64_t botGuid = bot->GetGUID().GetRawValue();
         
         std::thread([botGuid, senderGuid, prompt, sourceLocal, channelId = (channel ? channel->GetChannelId() : 0), msg]() {
             try {
                 // Use the QueryManager to submit the query.
-                std::future<std::string> responseFuture = SubmitQuery(prompt);
+                auto responseFuture = SubmitQuery(prompt);
+                if (!responseFuture.valid())
+                {
+                    return;
+                }
                 std::string response = responseFuture.get();
 
                 // Reacquire pointers by GUID.
@@ -781,7 +803,21 @@ static bool IsBotEligibleForChatChannelLocal(Player* bot, Player* player, ChatCh
 
 std::string GenerateBotPrompt(Player* bot, std::string playerMessage, Player* player)
 {  
+    if (!bot || !player) {
+        return "";
+    }
     PlayerbotAI* botAI = sPlayerbotsMgr->GetPlayerbotAI(bot);
+    if (botAI == nullptr) {
+        return "";
+    }
+    ChatHelper* helper = botAI->GetChatHelper();
+    if (helper == nullptr) {
+        return "";
+    }
+    if (g_ChatPromptTemplate.empty()) {
+        LOG_ERROR("server.loading", "[Ollama Chat] GenerateBotPrompt: template is empty");
+        return "";
+    }
 
     AreaTableEntry const* botCurrentArea = botAI->GetCurrentArea();
     AreaTableEntry const* botCurrentZone = botAI->GetCurrentZone();
