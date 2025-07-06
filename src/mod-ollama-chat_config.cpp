@@ -136,6 +136,23 @@ std::vector<std::string> g_EnvCommentBagSlots;
 std::vector<std::string> g_EnvCommentDungeon;
 std::vector<std::string> g_EnvCommentUnfinishedQuest;
 
+// --------------------------------------------
+// Event Chatter Templates
+// --------------------------------------------
+std::string g_EventTypeDefeated;           // "defeated"
+std::string g_EventTypeDefeatedPlayer;     // "defeated player"
+std::string g_EventTypePetDefeated;        // "pet defeated"
+std::string g_EventTypeGotItem;            // "got item"
+std::string g_EventTypeDied;               // "died"
+std::string g_EventTypeCompletedQuest;     // "completed quest"
+std::string g_EventTypeLearnedSpell;       // "learned spell"
+std::string g_EventTypeRequestedDuel;      // "requested to duel"
+std::string g_EventTypeStartedDueling;     // "started dueling"
+std::string g_EventTypeWonDuel;            // "won duel against"
+std::string g_EventTypeLeveledUp;          // "leveled up"
+std::string g_EventTypeAchievement;        // "earned achievement"
+std::string g_EventTypeUsedObject;         // "used object"
+
 
 static std::vector<std::string> SplitString(const std::string& str, char delim)
 {
@@ -290,6 +307,21 @@ void LoadOllamaChatConfig()
     g_EnableChatHistory               = sConfigMgr->GetOption<bool>("OllamaChat.EnableChatHistory", true);
 
     g_ThinkModeEnableForModule        = sConfigMgr->GetOption<bool>("OllamaChat.ThinkModeEnableForModule", false);
+
+    g_EventTypeDefeated           = sConfigMgr->GetOption<std::string>("OllamaChat.EventTypeDefeated", "");
+    g_EventTypeDefeatedPlayer     = sConfigMgr->GetOption<std::string>("OllamaChat.EventTypeDefeatedPlayer", "");
+    g_EventTypePetDefeated        = sConfigMgr->GetOption<std::string>("OllamaChat.EventTypePetDefeated", "");
+    g_EventTypeGotItem            = sConfigMgr->GetOption<std::string>("OllamaChat.EventTypeGotItem", "");
+    g_EventTypeDied               = sConfigMgr->GetOption<std::string>("OllamaChat.EventTypeDied", "");
+    g_EventTypeCompletedQuest     = sConfigMgr->GetOption<std::string>("OllamaChat.EventTypeCompletedQuest", "");
+    g_EventTypeLearnedSpell       = sConfigMgr->GetOption<std::string>("OllamaChat.EventTypeLearnedSpell", "");
+    g_EventTypeRequestedDuel      = sConfigMgr->GetOption<std::string>("OllamaChat.EventTypeRequestedDuel", "");
+    g_EventTypeStartedDueling     = sConfigMgr->GetOption<std::string>("OllamaChat.EventTypeStartedDueling", "");
+    g_EventTypeWonDuel            = sConfigMgr->GetOption<std::string>("OllamaChat.EventTypeWonDuel", "");
+    g_EventTypeLeveledUp          = sConfigMgr->GetOption<std::string>("OllamaChat.EventTypeLeveledUp", "");
+    g_EventTypeAchievement        = sConfigMgr->GetOption<std::string>("OllamaChat.EventTypeAchievement", "");
+    g_EventTypeUsedObject         = sConfigMgr->GetOption<std::string>("OllamaChat.EventTypeUsedObject", "");
+
 
     // Load extra blacklist commands from config (comma-separated list)
     std::string extraBlacklist = sConfigMgr->GetOption<std::string>("OllamaChat.BlacklistCommands", "");

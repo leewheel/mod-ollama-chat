@@ -143,9 +143,9 @@ void OllamaBotEventChatter::QueueEvent(Player* bot, std::string type, std::strin
             else
                 botAI->Say(response);
         }
-        catch (...)
+        catch (const std::exception& e)
         {
-            // log if needed, do nothing
+            LOG_ERROR("server.loading", "[OllamaChat] Exception in QueueEvent thread: {}", e.what());
         }
     }).detach();
 }
