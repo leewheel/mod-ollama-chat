@@ -8,16 +8,33 @@
 #include <fstream>
 
 
-// Global configuration variable definitions...
+// --------------------------------------------
+// Distance/Range Configuration
+// --------------------------------------------
 float      g_SayDistance       = 30.0f;
 float      g_YellDistance      = 100.0f;
 float      g_GeneralDistance   = 600.0f;
+float      g_RandomChatterRealPlayerDistance = 40.0f;
+float      g_EventChatterRealPlayerDistance = 40.0f;
+
+// --------------------------------------------
+// Bot/Player Chatter Probability & Limits
+// --------------------------------------------
 uint32_t   g_PlayerReplyChance = 90;
 uint32_t   g_BotReplyChance    = 10;
 uint32_t   g_MaxBotsToPick     = 2;
+uint32_t   g_RandomChatterBotCommentChance   = 25;
+uint32_t   g_RandomChatterMaxBotsPerPlayer   = 2;
+uint32_t   g_EventChatterBotCommentChance    = 15;
+uint32_t   g_EventChatterBotSelfCommentChance = 5;
+uint32_t   g_EventChatterMaxBotsPerPlayer    = 2;
+
+// --------------------------------------------
+// Ollama LLM API Configuration
+// --------------------------------------------
 std::string g_OllamaUrl        = "http://localhost:11434/api/generate";
 std::string g_OllamaModel      = "llama3.2:1b";
-uint32_t g_OllamaNumPredict    = 40;
+uint32_t    g_OllamaNumPredict = 40;
 float       g_OllamaTemperature = 0.8f;
 float       g_OllamaTopP = 0.95f;
 float       g_OllamaRepeatPenalty = 1.1f;
@@ -26,55 +43,86 @@ std::string g_OllamaStop = "";
 std::string g_OllamaSystemPrompt = "";
 std::string g_OllamaSeed = "";
 
+// --------------------------------------------
+// Concurrency/Queueing
+// --------------------------------------------
 uint32_t    g_MaxConcurrentQueries = 0;
 
+// --------------------------------------------
+// Feature Toggles & Core Settings
+// --------------------------------------------
 bool        g_Enable                          = true;
 bool        g_DisableRepliesInCombat          = true;
 bool        g_EnableRandomChatter             = true;
+bool        g_EnableEventChatter              = true;
+bool        g_EnableRPPersonalities           = false;
+bool        g_DebugEnabled                    = false;
+
+// --------------------------------------------
+// Think Mode Support
+// --------------------------------------------
+bool g_ThinkModeEnableForModule = false;
+
+// --------------------------------------------
+// Random Chatter Timing
+// --------------------------------------------
 uint32_t    g_MinRandomInterval               = 45;
 uint32_t    g_MaxRandomInterval               = 180;
-float       g_RandomChatterRealPlayerDistance = 40.0f;
-uint32_t    g_RandomChatterBotCommentChance   = 25;
-uint32_t    g_RandomChatterMaxBotsPerPlayer   = 2;
 
-bool       g_EnableRPPersonalities           = false;
+// --------------------------------------------
+// Conversation History Settings
+// --------------------------------------------
+uint32_t    g_MaxConversationHistory          = 5;
+uint32_t    g_ConversationHistorySaveInterval = 10;
 
-uint32_t g_MaxConversationHistory = 5;
-uint32_t g_ConversationHistorySaveInterval = 10;
-
+// --------------------------------------------
+// Prompt Templates
+// --------------------------------------------
 std::string g_RandomChatterPromptTemplate;
-
-std::unordered_map<uint64_t, std::string> g_BotPersonalityList;
-std::unordered_map<std::string, std::string> g_PersonalityPrompts;
-std::vector<std::string> g_PersonalityKeys;
-
+std::string g_EventChatterPromptTemplate;
 std::string g_ChatPromptTemplate;
 std::string g_ChatExtraInfoTemplate;
 
-bool g_EnableChatHistory = true;
+// --------------------------------------------
+// Personality and Prompt Data
+// --------------------------------------------
+std::unordered_map<uint64_t, std::string> g_BotPersonalityList;
+std::unordered_map<std::string, std::string> g_PersonalityPrompts;
+std::vector<std::string> g_PersonalityKeys;
+std::string g_DefaultPersonalityPrompt;
+
+// --------------------------------------------
+// Chat History Templates and Toggles
+// --------------------------------------------
+bool        g_EnableChatHistory = true;
 std::string g_ChatHistoryHeaderTemplate;
 std::string g_ChatHistoryLineTemplate;
 std::string g_ChatHistoryFooterTemplate;
 
+// --------------------------------------------
+// Chatbot Snapshot Template
+// --------------------------------------------
 bool        g_EnableChatBotSnapshotTemplate  = false;
 std::string g_ChatBotSnapshotTemplate;
 
-bool        g_DebugEnabled = false;
-
-std::string g_DefaultPersonalityPrompt;
-
-// Conversation history store
+// --------------------------------------------
+// Conversation History Store and Mutex
+// --------------------------------------------
 std::unordered_map<uint64_t, std::unordered_map<uint64_t, std::deque<std::pair<std::string, std::string>>>> g_BotConversationHistory;
 std::mutex g_ConversationHistoryMutex;
 time_t g_LastHistorySaveTime = 0;
 
-// Default blacklist commands; these are prefixes that indicate the message is a command.
+// --------------------------------------------
+// Blacklist: Prefixes for Commands (not chat)
+// --------------------------------------------
 std::vector<std::string> g_BlacklistCommands = {
     ".playerbots",
     "playerbot",
 };
 
-// Environment random chatter message templates (populated from config).
+// --------------------------------------------
+// Environment/Contextual Random Chatter Templates
+// --------------------------------------------
 std::vector<std::string> g_EnvCommentCreature;
 std::vector<std::string> g_EnvCommentGameObject;
 std::vector<std::string> g_EnvCommentEquippedItem;
@@ -106,7 +154,7 @@ static std::vector<std::string> SplitString(const std::string& str, char delim)
 }
 
 // Load Bot Personalities from Database
-static void LoadBotPersonalityList()
+void LoadBotPersonalityList()
 {    
     // Let's make sure our user has sourced the required sql file to add the new table
     QueryResult tableExists = CharacterDatabase.Query("SELECT * FROM information_schema.tables WHERE table_schema = 'acore_characters' AND table_name = 'mod_ollama_chat_personality' LIMIT 1");
@@ -202,6 +250,7 @@ void LoadOllamaChatConfig()
     g_Enable                          = sConfigMgr->GetOption<bool>("OllamaChat.Enable", true);
     g_DisableRepliesInCombat          = sConfigMgr->GetOption<bool>("OllamaChat.DisableRepliesInCombat", true);
     g_EnableRandomChatter             = sConfigMgr->GetOption<bool>("OllamaChat.EnableRandomChatter", true);
+    g_EnableEventChatter              = sConfigMgr->GetOption<bool>("OllamaChat.EnableEventChatter", true);
 
     g_DebugEnabled                    = sConfigMgr->GetOption<bool>("OllamaChat.DebugEnabled", false);
 
@@ -211,11 +260,16 @@ void LoadOllamaChatConfig()
     g_RandomChatterBotCommentChance   = sConfigMgr->GetOption<uint32_t>("OllamaChat.RandomChatterBotCommentChance", 25);
     g_RandomChatterMaxBotsPerPlayer   = sConfigMgr->GetOption<uint32_t>("OllamaChat.RandomChatterMaxBotsPerPlayer", 2);
 
-    g_MaxConcurrentQueries            = sConfigMgr->GetOption<uint32_t>("OllamaChat.MaxConcurrentQueries", 0);
+    g_EventChatterRealPlayerDistance = sConfigMgr->GetOption<float>("OllamaChat.EventChatterRealPlayerDistance", 40.0f);
+    g_EventChatterBotCommentChance   = sConfigMgr->GetOption<uint32_t>("OllamaChat.EventChatterBotCommentChance", 15);
+    g_EventChatterBotSelfCommentChance = sConfigMgr->GetOption<uint32_t>("OllamaChat.EventChatterBotSelfCommentChance", 5);
+    g_EventChatterMaxBotsPerPlayer   = sConfigMgr->GetOption<uint32_t>("OllamaChat.EventChatterMaxBotsPerPlayer", 2);
 
     g_EnableRPPersonalities           = sConfigMgr->GetOption<bool>("OllamaChat.EnableRPPersonalities", false);
 
     g_RandomChatterPromptTemplate     = sConfigMgr->GetOption<std::string>("OllamaChat.RandomChatterPromptTemplate", "");
+
+    g_EventChatterPromptTemplate     = sConfigMgr->GetOption<std::string>("OllamaChat.EventChatterPromptTemplate", "");
 
     g_ChatPromptTemplate              = sConfigMgr->GetOption<std::string>("OllamaChat.ChatPromptTemplate", "");
     
@@ -235,6 +289,7 @@ void LoadOllamaChatConfig()
 
     g_EnableChatHistory               = sConfigMgr->GetOption<bool>("OllamaChat.EnableChatHistory", true);
 
+    g_ThinkModeEnableForModule        = sConfigMgr->GetOption<bool>("OllamaChat.ThinkModeEnableForModule", false);
 
     // Load extra blacklist commands from config (comma-separated list)
     std::string extraBlacklist = sConfigMgr->GetOption<std::string>("OllamaChat.BlacklistCommands", "");
@@ -246,9 +301,6 @@ void LoadOllamaChatConfig()
             g_BlacklistCommands.push_back(cmd);
         }
     }
-
-    g_PersonalityPrompts.clear();
-    g_PersonalityKeys.clear();
 
     LoadPersonalityTemplatesFromDB();
 
@@ -276,7 +328,6 @@ void LoadOllamaChatConfig()
         return result;
     };
 
-
     g_EnvCommentCreature        = LoadEnvCommentVector("OllamaChat.EnvCommentCreature", { "" });
     g_EnvCommentGameObject      = LoadEnvCommentVector("OllamaChat.EnvCommentGameObject", { "" });
     g_EnvCommentEquippedItem    = LoadEnvCommentVector("OllamaChat.EnvCommentEquippedItem", { "" });
@@ -291,7 +342,7 @@ void LoadOllamaChatConfig()
     g_EnvCommentUnfinishedQuest = LoadEnvCommentVector("OllamaChat.EnvCommentUnfinishedQuest", { "" });
 
     LOG_INFO("server.loading",
-             "[mod-ollama-chat] Config loaded: Enabled = {}, SayDistance = {}, YellDistance = {}, "
+             "[Ollama Chat] Config loaded: Enabled = {}, SayDistance = {}, YellDistance = {}, "
              "GeneralDistance = {}, PlayerReplyChance = {}%, BotReplyChance = {}%, MaxBotsToPick = {}, "
              "Url = {}, Model = {}, MaxConcurrentQueries = {}, EnableRandomChatter = {}, MinRandInt = {}, MaxRandInt = {}, RandomChatterRealPlayerDistance = {}, "
              "RandomChatterBotCommentChance = {}. MaxConcurrentQueries = {}. Extra blacklist commands: {}",
@@ -320,8 +371,10 @@ void LoadPersonalityTemplatesFromDB()
         std::string prompt = (*result)[1].Get<std::string>();
         g_PersonalityPrompts[key] = prompt;
         g_PersonalityKeys.push_back(key);
-        LOG_INFO("server.loading", "Loaded personality key: '{}' value: '{}'", key, prompt);
     } while (result->NextRow());
+
+    LOG_INFO("server.loading", "[Ollama Chat] Cached {} personalities.", g_PersonalityKeys.size());
+
 }
 
 void LoadBotConversationHistoryFromDB()
@@ -362,5 +415,4 @@ void OllamaChatConfigWorldScript::OnStartup()
     LoadOllamaChatConfig();
     LoadBotPersonalityList();
     LoadBotConversationHistoryFromDB();
-
 }
