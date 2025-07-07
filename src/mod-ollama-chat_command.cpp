@@ -1,6 +1,7 @@
 #include "mod-ollama-chat_command.h"
 #include "mod-ollama-chat_config.h"
 #include "Chat.h"
+#include "Config.h"
 
 using namespace Acore::ChatCommands;
 
