@@ -204,64 +204,147 @@ std::string OllamaBotEventChatter::BuildPrompt(Player* bot, std::string promptTe
 
 ChatOnKill::ChatOnKill() : PlayerScript("ChatOnKill") {}
 
-void ChatOnKill::OnPlayerCreatureKill(Player* killer, Creature* victim) {
+void ChatOnKill::OnPlayerCreatureKill(Player* killer, Creature* victim)
+{
+    if (!killer || !victim)
+    {
+        return;
+    }
     eventChatter.DispatchGameEvent(killer, g_EventTypeDefeated, victim->GetName());
 }
-void ChatOnKill::OnPlayerPVPKill(Player* killer, Player* killed) {
+
+void ChatOnKill::OnPlayerPVPKill(Player* killer, Player* killed)
+{
+    if (!killer || !killed)
+    {
+        return;
+    }
     eventChatter.DispatchGameEvent(killer, g_EventTypeDefeatedPlayer, killed->GetName());
 }
-void ChatOnKill::OnPlayerCreatureKilledByPet(Player* owner, Creature* victim) {
+
+void ChatOnKill::OnPlayerCreatureKilledByPet(Player* owner, Creature* victim)
+{
+    if (!owner || !victim)
+    {
+        return;
+    }
     eventChatter.DispatchGameEvent(owner, g_EventTypePetDefeated, victim->GetName());
 }
 
 ChatOnLoot::ChatOnLoot() : PlayerScript("ChatOnLoot") {}
-void ChatOnLoot::OnPlayerStoreNewItem(Player* player, Item* item, uint32 /*count*/) {
-    if (item && item->GetTemplate() && item->GetTemplate()->Quality >= ITEM_QUALITY_UNCOMMON)
+
+void ChatOnLoot::OnPlayerStoreNewItem(Player* player, Item* item, uint32 /*count*/)
+{
+    if (!player || !item || !item->GetTemplate())
+    {
+        return;
+    }
+    if (item->GetTemplate()->Quality >= ITEM_QUALITY_UNCOMMON)
+    {
         eventChatter.DispatchGameEvent(player, g_EventTypeGotItem, item->GetTemplate()->Name1);
+    }
 }
 
 ChatOnDeath::ChatOnDeath() : PlayerScript("ChatOnDeath") {}
-void ChatOnDeath::OnPlayerJustDied(Player* player) {
+
+void ChatOnDeath::OnPlayerJustDied(Player* player)
+{
+    if (!player)
+    {
+        return;
+    }
     eventChatter.DispatchGameEvent(player, g_EventTypeDied, "");
 }
 
 ChatOnQuest::ChatOnQuest() : PlayerScript("ChatOnQuest") {}
-void ChatOnQuest::OnPlayerCompleteQuest(Player* player, Quest const* quest) {
+
+void ChatOnQuest::OnPlayerCompleteQuest(Player* player, Quest const* quest)
+{
+    if (!player || !quest)
+    {
+        return;
+    }
     eventChatter.DispatchGameEvent(player, g_EventTypeCompletedQuest, quest->GetTitle());
 }
 
 ChatOnLearn::ChatOnLearn() : PlayerScript("ChatOnLearn") {}
-void ChatOnLearn::OnPlayerLearnSpell(Player* player, uint32 spellID) {
-    if (SpellInfo const* spellInfo = sSpellMgr->GetSpellInfo(spellID))
+
+void ChatOnLearn::OnPlayerLearnSpell(Player* player, uint32 spellID)
+{
+    if (!player)
+    {
+        return;
+    }
+    SpellInfo const* spellInfo = sSpellMgr->GetSpellInfo(spellID);
+    if (spellInfo)
+    {
         eventChatter.DispatchGameEvent(player, g_EventTypeLearnedSpell, spellInfo->SpellName[0]);
+    }
     else
+    {
         eventChatter.DispatchGameEvent(player, g_EventTypeLearnedSpell, std::to_string(spellID));
+    }
 }
 
 ChatOnDuel::ChatOnDuel() : PlayerScript("ChatOnDuel") {}
-void ChatOnDuel::OnPlayerDuelRequest(Player* target, Player* challenger) {
+
+void ChatOnDuel::OnPlayerDuelRequest(Player* target, Player* challenger)
+{
+    if (!challenger || !target)
+    {
+        return;
+    }
     eventChatter.DispatchGameEvent(challenger, g_EventTypeRequestedDuel, target->GetName());
 }
-void ChatOnDuel::OnPlayerDuelStart(Player* player1, Player* player2) {
+
+void ChatOnDuel::OnPlayerDuelStart(Player* player1, Player* player2)
+{
+    if (!player1 || !player2)
+    {
+        return;
+    }
     eventChatter.DispatchGameEvent(player1, g_EventTypeStartedDueling, player2->GetName());
 }
-void ChatOnDuel::OnPlayerDuelEnd(Player* winner, Player* loser, DuelCompleteType /*type*/) {
+
+void ChatOnDuel::OnPlayerDuelEnd(Player* winner, Player* loser, DuelCompleteType /*type*/)
+{
+    if (!winner || !loser)
+    {
+        return;
+    }
     eventChatter.DispatchGameEvent(winner, g_EventTypeWonDuel, loser->GetName());
 }
 
 ChatOnLevelUp::ChatOnLevelUp() : PlayerScript("ChatOnLevelUp") {}
-void ChatOnLevelUp::OnPlayerLevelChanged(Player* player, uint8 /*oldLevel*/) {
+
+void ChatOnLevelUp::OnPlayerLevelChanged(Player* player, uint8 /*oldLevel*/)
+{
+    if (!player)
+    {
+        return;
+    }
     eventChatter.DispatchGameEvent(player, g_EventTypeLeveledUp, std::to_string(player->GetLevel()));
 }
 
 ChatOnAchievement::ChatOnAchievement() : PlayerScript("ChatOnAchievement") {}
-void ChatOnAchievement::OnPlayerCompleteAchievement(Player* player, AchievementEntry const* achievement) {
-    if (achievement)
-        eventChatter.DispatchGameEvent(player, g_EventTypeAchievement, achievement->name[0]);
+
+void ChatOnAchievement::OnPlayerCompleteAchievement(Player* player, AchievementEntry const* achievement)
+{
+    if (!player || !achievement)
+    {
+        return;
+    }
+    eventChatter.DispatchGameEvent(player, g_EventTypeAchievement, achievement->name[0]);
 }
 
 ChatOnGameObjectUse::ChatOnGameObjectUse() : PlayerScript("ChatOnGameObjectUse") {}
-void ChatOnGameObjectUse::OnGameObjectUse(Player* player, GameObject* go) {
-    if (go && go->GetGOInfo())
-        eventChatter.DispatchGameEvent(player, g_EventTypeUsedObject, go->GetGOInfo()->name);
+
+void ChatOnGameObjectUse::OnGameObjectUse(Player* player, GameObject* go)
+{
+    if (!player || !go || !go->GetGOInfo())
+    {
+        return;
+    }
+    eventChatter.DispatchGameEvent(player, g_EventTypeUsedObject, go->GetGOInfo()->name);
 }
+
