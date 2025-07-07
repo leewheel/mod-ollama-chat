@@ -169,8 +169,8 @@ OllamaChat.EnableRandomChatter = 1
 
 # OllamaChat.DisableRepliesInCombat
 #     Description: If true, bots will not reply or produce random chatter when in combat.
-#     Default:     true
-OllamaChat.DisableRepliesInCombat = true
+#     Default:     1
+OllamaChat.DisableRepliesInCombat = 1
 
 # OllamaChat.MinRandomInterval
 #     Description: The minimum time (in seconds) between random lines from an AI bot.
