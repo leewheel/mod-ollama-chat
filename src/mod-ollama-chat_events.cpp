@@ -24,6 +24,11 @@ void OllamaBotEventChatter::DispatchGameEvent(Player* source, std::string type, 
 {
     if (!g_Enable || !g_EnableEventChatter)
         return;
+    
+    if (!source)
+    {
+       return;
+    }
 
     bool isSourceBot = sPlayerbotsMgr->GetPlayerbotAI(source) != nullptr;
     bool hasNearbyRealPlayer = false;
