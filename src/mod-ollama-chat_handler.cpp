@@ -36,6 +36,8 @@
 #include "GameObject.h"
 #include "TravelMgr.h"
 #include "TravelNode.h"
+#include "ObjectMgr.h"
+#include "QuestDef.h"
 
 // For AzerothCore range checks
 #include "GridNotifiersImpl.h"
@@ -470,8 +472,26 @@ static std::string GenerateBotGameStateSnapshot(Player* bot)
     std::string spells = ChatHandler_GetBotSpellInfo(bot);
 
     std::string quests;
-    for (auto const& qs : bot->getQuestStatusMap())
-        quests += "Quest " + std::to_string(qs.first) + " status " + std::to_string(qs.second.Status) + "\n";
+    for (auto const& [questId, qsd] : bot->getQuestStatusMap())
+    {
+        // look up the template
+        Quest const* quest = sObjectMgr->GetQuestTemplate(questId);
+        if (!quest)
+            continue;
+
+        // get the English title as a fallback
+        std::string title = quest->GetTitle();
+
+        // then, if we have a locale record, overwrite it
+        if (auto const* locale = sObjectMgr->GetQuestLocale(questId))
+        {
+            int locIdx = bot->GetSession()->GetSessionDbLocaleIndex();
+            if (locIdx >= 0)
+                ObjectMgr::GetLocaleString(locale->Title, locIdx, title);
+        }
+
+        quests += "Quest \"" + title + "\" status " + std::to_string(qsd.Status) + "\n";
+    }
 
     std::string los;
     std::vector<std::string> losLocs = ChatHandler_GetVisibleLocations(bot);
@@ -496,7 +516,6 @@ static std::string GenerateBotGameStateSnapshot(Player* bot)
         fmt::arg("players", players)
     );
 }
-
 
 
 void PlayerBotChatHandler::ProcessChat(Player* player, uint32_t /*type*/, uint32_t /*lang*/, std::string& msg, ChatChannelSourceLocal sourceLocal, Channel* channel)
