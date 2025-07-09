@@ -1,7 +1,12 @@
-# Ensure the module is correctly registered before linking
 if(TARGET modules)
-    target_link_libraries(modules PRIVATE curl)
-    
-    # Explicitly include nlohmann-json path
-    target_include_directories(modules PRIVATE /usr/local/include /usr/local/include/nlohmann)
+    # 添加头文件路径
+    target_include_directories(modules PRIVATE
+        ${CMAKE_SOURCE_DIR}/deps/curl
+        ${CMAKE_SOURCE_DIR}/deps/nlohmann
+    )
+
+    # 直接链接本地 curl.lib 文件
+    target_link_libraries(modules PRIVATE
+        ${CMAKE_SOURCE_DIR}/deps/curl/curl/lib/curl.lib
+    )
 endif()
