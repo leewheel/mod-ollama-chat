@@ -39,7 +39,7 @@ std::string QueryOllamaAPI(const std::string& prompt)
         {
             LOG_INFO("server.loading", "[Ollama Chat] Failed to initialize cURL.");
         }
-        return "Hmm... I'm lost in thought.";
+        return "嗯....我脑子暂时有点懵。";
     }
 
     std::string url   = g_OllamaUrl;
@@ -109,7 +109,7 @@ std::string QueryOllamaAPI(const std::string& prompt)
                     "[Ollama Chat] Failed to reach Ollama AI. cURL error: {}",
                     curl_easy_strerror(res));
         }
-        return "Failed to reach Ollama AI.";
+        return "不能连接Ollama AI.";
     }
 
     std::stringstream ss(responseBuffer);
@@ -139,7 +139,7 @@ std::string QueryOllamaAPI(const std::string& prompt)
                     "[Ollama Chat] JSON Parsing Error: {}",
                     e.what());
         }
-        return "Error processing response.";
+        return "回应进程错误(Json错误)";
     }
 
     std::string botReply = extractedResponse.str();
@@ -152,7 +152,7 @@ std::string QueryOllamaAPI(const std::string& prompt)
         {
             LOG_INFO("server.loading", "[Ollama Chat] No valid response extracted.");
         }
-        return "I'm having trouble understanding.";
+        return "不好意思，我目前智商不在线！";
     }
 
     if(g_DebugEnabled)
