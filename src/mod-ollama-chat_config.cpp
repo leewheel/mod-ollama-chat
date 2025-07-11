@@ -374,10 +374,10 @@ void LoadOllamaChatConfig()
     g_EnvCommentUnfinishedQuest = LoadEnvCommentVector("OllamaChat.EnvCommentUnfinishedQuest", { "" });
 
     LOG_INFO("server.loading",
-             "[Ollama Chat] Config loaded: Enabled = {}, SayDistance = {}, YellDistance = {}, "
-             "GeneralDistance = {}, PlayerReplyChance = {}%, BotReplyChance = {}%, MaxBotsToPick = {}, "
-             "Url = {}, Model = {}, MaxConcurrentQueries = {}, EnableRandomChatter = {}, MinRandInt = {}, MaxRandInt = {}, RandomChatterRealPlayerDistance = {}, "
-             "RandomChatterBotCommentChance = {}. MaxConcurrentQueries = {}. Extra blacklist commands: {}",
+             "[Ollama Chat] 配置已加载: \nEnabled = {}, \nSayDistance = {}, \nYellDistance = {}, "
+             "\nGeneralDistance = {}, \nPlayerReplyChance = {}%, \nBotReplyChance = {}%, \nMaxBotsToPick = {}, "
+             "\nUrl = {}, \nModel = {}, \nMaxConcurrentQueries = {}, \nEnableRandomChatter = {}, \nMinRandInt = {}, \nMaxRandInt = {}, \nRandomChatterRealPlayerDistance = {}, "
+             "\nRandomChatterBotCommentChance = {}. \nMaxConcurrentQueries = {}. \nExtra blacklist commands: {}",
              g_Enable, g_SayDistance, g_YellDistance, g_GeneralDistance,
              g_PlayerReplyChance, g_BotReplyChance, g_MaxBotsToPick,
              g_OllamaUrl, g_OllamaModel, g_MaxConcurrentQueries,
