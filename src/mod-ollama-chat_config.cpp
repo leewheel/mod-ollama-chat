@@ -177,7 +177,7 @@ void LoadBotPersonalityList()
     QueryResult tableExists = CharacterDatabase.Query("SELECT * FROM information_schema.tables WHERE table_schema = 'acore_characters' AND table_name = 'mod_ollama_chat_personality' LIMIT 1");
     if (!tableExists)
     {
-        LOG_ERROR("server.loading", "[Ollama Chat] Please source the required database table first");
+        LOG_ERROR("server.loading", "[Ollama Chat] LoadBotPersonalityList Error Please source the required database table first");
         return;
     }
 
