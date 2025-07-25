@@ -148,7 +148,7 @@ void LoadBotPlayerSentimentsFromDB()
     std::lock_guard<std::mutex> lock(g_SentimentMutex);
     g_BotPlayerSentiments.clear();
     
-    QueryResult result = CharacterDatabase.Query("SELECT bot_guid, player_guid, sentiment_value FROM mod_ollama_bot_player_sentiments");
+    QueryResult result = CharacterDatabase.Query("SELECT bot_guid, player_guid, sentiment_value FROM mod_ollama_chat_bot_player_sentiments");
     
     if (!result)
     {
@@ -188,7 +188,7 @@ void SaveBotPlayerSentimentsToDB()
         for (const auto& [playerGuid, sentimentValue] : playerMap)
         {
             CharacterDatabase.Execute(SafeFormat(
-                "REPLACE INTO mod_ollama_bot_player_sentiments (bot_guid, player_guid, sentiment_value) "
+                "REPLACE INTO mod_ollama_chat_bot_player_sentiments (bot_guid, player_guid, sentiment_value) "
                 "VALUES ({}, {}, {:.3f})",
                 botGuid, playerGuid, sentimentValue));
         }

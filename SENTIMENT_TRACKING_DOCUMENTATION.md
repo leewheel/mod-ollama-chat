@@ -29,10 +29,10 @@ The sentiment tracking system enables bots to remember how players treat them ov
 
 ## Database Schema
 
-The system creates a new table: `mod_ollama_bot_player_sentiments`
+The system creates a new table: `mod_ollama_chat_bot_player_sentiments`
 
 ```sql
-CREATE TABLE IF NOT EXISTS mod_ollama_bot_player_sentiments (
+CREATE TABLE IF NOT EXISTS mod_ollama_chat_bot_player_sentiments (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     bot_guid BIGINT UNSIGNED NOT NULL,
     player_guid BIGINT UNSIGNED NOT NULL,
