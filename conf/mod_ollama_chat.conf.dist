@@ -306,6 +306,43 @@ OllamaChat.ChatHistoryFooterTemplate = "NEW MESSAGE from {player_name}: {player_
 #   Placeholders (named): {combat} {group} {spells} {quests} {los} {players}
 OllamaChat.ChatBotSnapshotTemplate = "CURRENT CONTEXT:\n{combat}\n{group}\nSpells:\n{spells}\nQuests:\n{quests}\nVisible Objects:\n{los}\nNearby Players:\n{players}"
 
+# ----------------------------------------------
+# Bot-Player Sentiment Tracking System
+# ----------------------------------------------
+
+# Enable or disable sentiment tracking between bots and players
+# Default: 1 (enabled)
+OllamaChat.EnableSentimentTracking = 1
+
+# Default sentiment value for new bot-player relationships
+# Range: 0.0 (hostile) to 1.0 (friendly), 0.5 = neutral
+# Default: 0.5
+OllamaChat.SentimentDefaultValue = 0.5
+
+# How much to adjust sentiment per positive/negative message
+# Range: 0.01 to 0.5 (smaller = more gradual changes)
+# Default: 0.1
+OllamaChat.SentimentAdjustmentStrength = 0.1
+
+# How often to save sentiment data to database (in minutes)
+# Set to 0 to disable periodic saving
+# Default: 10
+OllamaChat.SentimentSaveInterval = 10
+
+# Prompt template for sentiment analysis
+# Use {message} placeholder for the message to analyze
+# Default: "Analyze the sentiment of this message: \"{message}\". Respond only with: POSITIVE, NEGATIVE, or NEUTRAL."
+OllamaChat.SentimentAnalysisPrompt = "Analyze the sentiment of this message: \"{message}\". Respond only with: POSITIVE, NEGATIVE, or NEUTRAL."
+
+# Template for including sentiment information in bot prompts
+# Use {player_name} and {sentiment_value} placeholders
+# Default: "Your relationship sentiment with {player_name} is {sentiment_value} (0.0=hostile, 0.5=neutral, 1.0=friendly). Use this to guide your tone and response."
+OllamaChat.SentimentPromptTemplate = "Your relationship sentiment with {player_name} is {sentiment_value} (0.0=hostile, 0.5=neutral, 1.0=friendly). Use this to guide your tone and response."
+
+# Note: Make sure your chat and event prompt templates include the {sentiment_info} placeholder
+# Example chat template:
+# OllamaChat.ChatPromptTemplate = "You are {bot_name}, a {bot_class} bot. {bot_personality} {sentiment_info} Player {player_name} says: {player_message}"
+
 # --------------------------------------------
 # CHAT/PROMPT TEMPLATES
 # --------------------------------------------
