@@ -123,7 +123,10 @@ bool ArenaTeam::AddMember(ObjectGuid playerGuid)
     // Check if player is already in a similar arena team
     if ((player && player->GetArenaTeamId(GetSlot())) || sCharacterCache->GetCharacterArenaTeamIdByGuid(playerGuid, GetSlot()) != 0)
     {
-        LOG_ERROR("bg.arena", "Arena: Player {} ({}) already has an arena team of type {}", playerName, playerGuid.ToString(), GetType());
+        if (!player->GetSession()->IsBot())
+        {
+            LOG_ERROR("bg.arena", "Arena: Player {} ({}) already has an arena team of type {}", playerName, playerGuid.ToString(), GetType());
+        }
         return false;
     }
 

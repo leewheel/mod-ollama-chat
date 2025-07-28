@@ -22,8 +22,18 @@
 #include <algorithm>
 #include <cmath>
 #include <iterator>
+#include <ctime>
+#include <iomanip> // For std::put_time
+#include <thread>
+#include <atomic>
+#include <sstream>
+#include <string>
+#include <fstream>
+#include <windows.h>
+#include <psapi.h> // 包含了PROCESS_MEMORY_COUNTERS_EX
+#include <chrono>
 
-// create instance
+ // create instance
 WorldUpdateTime sWorldUpdateTime;
 
 UpdateTime::UpdateTime()
@@ -89,7 +99,7 @@ uint32 UpdateTime::GetPercentile(uint8 p)
 
     // If the index is an integer, return the value at that index
     if (index == std::floor(index))
-       return _orderedUpdateTimeDataTable[index];
+        return _orderedUpdateTimeDataTable[index];
 
     // Otherwise, perform linear interpolation
     int lowerIndex = std::floor(index);
@@ -160,8 +170,40 @@ void WorldUpdateTime::SetRecordUpdateTimeInterval(Milliseconds t)
     _recordUpdateTimeInverval = t;
 }
 
+std::string getCurrentMemoryUsage() {
+    std::stringstream memoryUsage;
+
+    PROCESS_MEMORY_COUNTERS_EX pmc;
+    if (GetProcessMemoryInfo(GetCurrentProcess(), (PROCESS_MEMORY_COUNTERS*)&pmc, sizeof(pmc)))
+    {
+        memoryUsage << pmc.WorkingSetSize / (1024 * 1024) << " MB";
+    }
+
+    return memoryUsage.str();
+}
+
+
+std::string getCurrentTimeAsString() {
+    // Get the current time
+    auto now = std::chrono::system_clock::now();
+
+    // Convert the current time to time_t (seconds since epoch)
+    std::time_t currentTime = std::chrono::system_clock::to_time_t(now);
+
+    // Convert time_t to tm struct
+    std::tm localTime = *std::localtime(&currentTime);
+
+    // Format the time as HH:MM:SS
+    std::stringstream ss;
+    ss << std::put_time(&localTime, "%H:%M:%S");
+    return ss.str();
+}
+
 void WorldUpdateTime::RecordUpdateTime(Milliseconds gameTimeMs, uint32 diff, uint32 sessionCount)
 {
+    std::string currentTimeString = getCurrentTimeAsString();
+    std::string memoryUsage = getCurrentMemoryUsage();
+
     if (_recordUpdateTimeInverval > 0s && diff > _recordUpdateTimeMin.count())
     {
         if (GetMSTimeDiff(_lastRecordTime, gameTimeMs) > _recordUpdateTimeInverval)
@@ -170,7 +212,8 @@ void WorldUpdateTime::RecordUpdateTime(Milliseconds gameTimeMs, uint32 diff, uin
             LOG_INFO("time.update", "Last {} diffs summary:", GetDatasetSize());
             LOG_INFO("time.update", "|- Mean: {}ms", GetAverageUpdateTime());
             LOG_INFO("time.update", "|- Median: {}ms", GetPercentile(50));
-            LOG_INFO("time.update", "|- Percentiles (95, 99, max): {}ms, {}ms, {}ms", GetPercentile(95), GetPercentile(99), GetPercentile(100));
+            LOG_INFO("time.update", "|- {} : Percentiles (95, 99, max): {}ms, {}ms, {}ms", currentTimeString, GetPercentile(95), GetPercentile(99), GetPercentile(100));
+            LOG_INFO("time.update", "当前内存占用:{}", memoryUsage);
             _lastRecordTime = gameTimeMs;
         }
     }

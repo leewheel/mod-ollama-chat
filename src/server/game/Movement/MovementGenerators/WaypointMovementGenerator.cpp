@@ -39,8 +39,12 @@ void WaypointMovementGenerator<Creature>::LoadPath(Creature* creature)
     if (!i_path)
     {
         // No movement found for entry
-        LOG_ERROR("sql.sql", "WaypointMovementGenerator::LoadPath: creature {} ({}) doesn't have waypoint path id: {}",
-            creature->GetName(), creature->GetGUID().ToString(), path_id);
+        if (path_id != 0)
+        {
+            LOG_ERROR("sql.sql", "WaypointMovementGenerator::LoadPath: creature {} ({}) doesn't have waypoint path id: {}",
+                creature->GetName(), creature->GetGUID().ToString(), path_id);
+        }
+
         return;
     }
 

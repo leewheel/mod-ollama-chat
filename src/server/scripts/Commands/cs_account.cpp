@@ -39,7 +39,7 @@ using namespace Acore::ChatCommands;
 class account_commandscript : public CommandScript
 {
 public:
-    account_commandscript() : CommandScript("account_commandscript") { }
+    account_commandscript() : CommandScript("account_commandscript") {}
 
     ChatCommandTable GetCommands() const override
     {
@@ -282,30 +282,30 @@ public:
         AccountOpResult result = AccountMgr::CreateAccount(std::string(accountName), std::string(password), emailStr);
         switch (result)
         {
-            case AOR_OK:
-                handler->PSendSysMessage(LANG_ACCOUNT_CREATED, accountName);
-                if (handler->GetSession())
-                {
-                    LOG_DEBUG("warden", "Account: {} (IP: {}) Character:[{}] ({}) Change Password.",
-                                   handler->GetSession()->GetAccountId(), handler->GetSession()->GetRemoteAddress(),
-                                   handler->GetSession()->GetPlayer()->GetName(), handler->GetSession()->GetPlayer()->GetGUID().ToString());
-                }
-                break;
-            case AOR_NAME_TOO_LONG:
-                handler->SendErrorMessage(LANG_ACCOUNT_TOO_LONG);
-                return false;
-            case AOR_PASS_TOO_LONG:
-                handler->SendErrorMessage(LANG_ACCOUNT_PASS_TOO_LONG);
-                return false;
-            case AOR_NAME_ALREADY_EXIST:
-                handler->SendErrorMessage(LANG_ACCOUNT_ALREADY_EXIST);
-                return false;
-            case AOR_DB_INTERNAL_ERROR:
-                handler->SendErrorMessage(LANG_ACCOUNT_NOT_CREATED_SQL_ERROR, accountName);
-                return false;
-            default:
-                handler->SendErrorMessage(LANG_ACCOUNT_NOT_CREATED, accountName);
-                return false;
+        case AOR_OK:
+            handler->PSendSysMessage(LANG_ACCOUNT_CREATED, accountName);
+            if (handler->GetSession())
+            {
+                LOG_DEBUG("warden", "Account: {} (IP: {}) Character:[{}] ({}) Change Password.",
+                    handler->GetSession()->GetAccountId(), handler->GetSession()->GetRemoteAddress(),
+                    handler->GetSession()->GetPlayer()->GetName(), handler->GetSession()->GetPlayer()->GetGUID().ToString());
+            }
+            break;
+        case AOR_NAME_TOO_LONG:
+            handler->SendErrorMessage(LANG_ACCOUNT_TOO_LONG);
+            return false;
+        case AOR_PASS_TOO_LONG:
+            handler->SendErrorMessage(LANG_ACCOUNT_PASS_TOO_LONG);
+            return false;
+        case AOR_NAME_ALREADY_EXIST:
+            handler->SendErrorMessage(LANG_ACCOUNT_ALREADY_EXIST);
+            return false;
+        case AOR_DB_INTERNAL_ERROR:
+            handler->SendErrorMessage(LANG_ACCOUNT_NOT_CREATED_SQL_ERROR, accountName);
+            return false;
+        default:
+            handler->SendErrorMessage(LANG_ACCOUNT_NOT_CREATED, accountName);
+            return false;
         }
 
         return true;
@@ -346,18 +346,18 @@ public:
         AccountOpResult result = AccountMgr::DeleteAccount(accountId);
         switch (result)
         {
-            case AOR_OK:
-                handler->PSendSysMessage(LANG_ACCOUNT_DELETED, accountName);
-                break;
-            case AOR_NAME_NOT_EXIST:
-                handler->SendErrorMessage(LANG_ACCOUNT_NOT_EXIST, accountName.c_str());
-                return false;
-            case AOR_DB_INTERNAL_ERROR:
-                handler->SendErrorMessage(LANG_ACCOUNT_NOT_DELETED_SQL_ERROR, accountName.c_str());
-                return false;
-            default:
-                handler->SendErrorMessage(LANG_ACCOUNT_NOT_DELETED, accountName.c_str());
-                return false;
+        case AOR_OK:
+            handler->PSendSysMessage(LANG_ACCOUNT_DELETED, accountName);
+            break;
+        case AOR_NAME_NOT_EXIST:
+            handler->SendErrorMessage(LANG_ACCOUNT_NOT_EXIST, accountName.c_str());
+            return false;
+        case AOR_DB_INTERNAL_ERROR:
+            handler->SendErrorMessage(LANG_ACCOUNT_NOT_DELETED_SQL_ERROR, accountName.c_str());
+            return false;
+        default:
+            handler->SendErrorMessage(LANG_ACCOUNT_NOT_DELETED, accountName.c_str());
+            return false;
         }
 
         return true;
@@ -399,9 +399,9 @@ public:
             {
                 Field* fieldsLogin = resultLogin->Fetch();
                 handler->PSendSysMessage(LANG_ACCOUNT_LIST_LINE,
-                                         fieldsLogin[0].Get<std::string>(), name, fieldsLogin[1].Get<std::string>(),
-                                         fieldsDB[2].Get<uint16>(), fieldsDB[3].Get<uint16>(), fieldsLogin[3].Get<uint8>(),
-                                         fieldsLogin[2].Get<uint8>());
+                    fieldsLogin[0].Get<std::string>(), name, fieldsLogin[1].Get<std::string>(),
+                    fieldsDB[2].Get<uint16>(), fieldsDB[3].Get<uint16>(), fieldsLogin[3].Get<uint8>(),
+                    fieldsLogin[2].Get<uint8>());
             }
             else
                 handler->PSendSysMessage(LANG_ACCOUNT_LIST_ERROR, name);
@@ -560,17 +560,17 @@ public:
         AccountOpResult result = AccountMgr::ChangePassword(handler->GetSession()->GetAccountId(), std::string(newPassword));
         switch (result)
         {
-            case AOR_OK:
-                handler->SendSysMessage(LANG_COMMAND_PASSWORD);
-                sScriptMgr->OnPasswordChange(handler->GetSession()->GetAccountId());
-                break;
-            case AOR_PASS_TOO_LONG:
-                handler->SendErrorMessage(LANG_PASSWORD_TOO_LONG);
-                sScriptMgr->OnFailedPasswordChange(handler->GetSession()->GetAccountId());
-                return false;
-            default:
-                handler->SendErrorMessage(LANG_COMMAND_NOTCHANGEPASSWORD);
-                return false;
+        case AOR_OK:
+            handler->SendSysMessage(LANG_COMMAND_PASSWORD);
+            sScriptMgr->OnPasswordChange(handler->GetSession()->GetAccountId());
+            break;
+        case AOR_PASS_TOO_LONG:
+            handler->SendErrorMessage(LANG_PASSWORD_TOO_LONG);
+            sScriptMgr->OnFailedPasswordChange(handler->GetSession()->GetAccountId());
+            return false;
+        default:
+            handler->SendErrorMessage(LANG_COMMAND_NOTCHANGEPASSWORD);
+            return false;
         }
 
         return true;
@@ -705,7 +705,7 @@ public:
         // Let set addon state only for lesser (strong) security level
         // or to self account
         if (handler->GetSession() && handler->GetSession()->GetAccountId() != accountId &&
-                handler->HasLowerSecurityAccount(nullptr, accountId, true))
+            handler->HasLowerSecurityAccount(nullptr, accountId, true))
             return false;
 
         auto expansion = Acore::StringTo<uint8>(exp); //get int anyway (0 if error)
@@ -884,18 +884,18 @@ public:
 
         switch (result)
         {
-            case AOR_OK:
-                handler->SendSysMessage(LANG_COMMAND_PASSWORD);
-                break;
-            case AOR_NAME_NOT_EXIST:
-                handler->SendErrorMessage(LANG_ACCOUNT_NOT_EXIST, accountName);
-                return false;
-            case AOR_PASS_TOO_LONG:
-                handler->SendErrorMessage(LANG_PASSWORD_TOO_LONG);
-                return false;
-            default:
-                handler->SendErrorMessage(LANG_COMMAND_NOTCHANGEPASSWORD);
-                return false;
+        case AOR_OK:
+            handler->SendSysMessage(LANG_COMMAND_PASSWORD);
+            break;
+        case AOR_NAME_NOT_EXIST:
+            handler->SendErrorMessage(LANG_ACCOUNT_NOT_EXIST, accountName);
+            return false;
+        case AOR_PASS_TOO_LONG:
+            handler->SendErrorMessage(LANG_PASSWORD_TOO_LONG);
+            return false;
+        default:
+            handler->SendErrorMessage(LANG_COMMAND_NOTCHANGEPASSWORD);
+            return false;
         }
         return true;
     }
@@ -931,19 +931,212 @@ public:
 
         switch (result)
         {
-            case AOR_OK:
-                handler->SendSysMessage(LANG_COMMAND_EMAIL);
-                break;
-            case AOR_NAME_NOT_EXIST:
-                handler->SendErrorMessage(LANG_ACCOUNT_NOT_EXIST, accountName);
-                return false;
-            case AOR_EMAIL_TOO_LONG:
-                handler->SendErrorMessage(LANG_EMAIL_TOO_LONG);
-                return false;
-            default:
-                handler->SendErrorMessage(LANG_COMMAND_NOTCHANGEEMAIL);
-                return false;
+        case AOR_OK:
+            handler->SendSysMessage(LANG_COMMAND_EMAIL);
+            break;
+        case AOR_NAME_NOT_EXIST:
+            handler->SendErrorMessage(LANG_ACCOUNT_NOT_EXIST, accountName);
+            return false;
+        case AOR_EMAIL_TOO_LONG:
+            handler->SendErrorMessage(LANG_EMAIL_TOO_LONG);
+            return false;
+        default:
+            handler->SendErrorMessage(LANG_COMMAND_NOTCHANGEEMAIL);
+            return false;
         }
+        return true;
+    }
+};
+
+class account_create : public CommandScript
+{
+public:
+    account_create() : CommandScript("account_create") {}
+
+    ChatCommandTable GetCommands() const override
+    {
+        static ChatCommandTable accountcreateTable =
+        {
+
+            { "创建",     HandleAccountCreateIngame,      SEC_ADMINISTRATOR,   Console::Yes },
+            { "设置GM",    HandleAccountSetGmLevelIngame,   SEC_ADMINISTRATOR, Console::Yes },
+
+        };
+
+        static ChatCommandTable createTable =
+        {
+            { "账号", accountcreateTable }
+        };
+
+        return createTable;
+    }
+
+    static bool HandleAccountSetGmLevelIngame(ChatHandler* handler, char const* args)
+    {
+        if (!*args)
+            return false;
+
+        std::string targetAccountName;
+        uint32 targetAccountId = 0;
+        uint32 targetSecurity = 0;
+        uint32 gm = 0;
+        char* arg1 = strtok((char*)args, " ");
+        char* arg2 = strtok(nullptr, " ");
+        char* arg3 = strtok(nullptr, " ");
+        bool isAccountNameGiven = true;
+
+        if (arg1 && !arg3)
+        {
+            if (!handler->getSelectedPlayer())
+                return false;
+            isAccountNameGiven = false;
+        }
+
+        // Check for second parameter
+        if (!isAccountNameGiven && !arg2)
+            return false;
+
+        // Check for account
+        if (isAccountNameGiven)
+        {
+            targetAccountName = arg1;
+            if (!Utf8ToUpperOnlyLatin(targetAccountName))
+            {
+                handler->SendErrorMessage(LANG_ACCOUNT_NOT_EXIST, targetAccountName);
+                return false;
+            }
+        }
+
+        // Check for invalid specified GM level.
+        gm = (isAccountNameGiven) ? Acore::StringTo<int32>(arg2).value_or(0) : Acore::StringTo<int32>(arg1).value_or(0);
+        if (gm > SEC_CONSOLE)
+        {
+            handler->SendErrorMessage(LANG_BAD_VALUE);
+            return false;
+        }
+
+        // handler->getSession() == nullptr only for console
+        targetAccountId = (isAccountNameGiven) ? AccountMgr::GetId(targetAccountName) : handler->getSelectedPlayer()->GetSession()->GetAccountId();
+        int32 gmRealmID = (isAccountNameGiven) ? Acore::StringTo<int32>(arg3).value_or(0) : Acore::StringTo<int32>(arg2).value_or(0);
+        uint32 playerSecurity;
+        if (handler->GetSession())
+            playerSecurity = AccountMgr::GetSecurity(handler->GetSession()->GetAccountId(), gmRealmID);
+        else
+            playerSecurity = SEC_CONSOLE;
+
+        // can set security level only for target with less security and to less security that we have
+        // This is also reject self apply in fact
+        targetSecurity = AccountMgr::GetSecurity(targetAccountId, gmRealmID);
+        if (targetSecurity > playerSecurity || gm > playerSecurity)
+        {
+            handler->SendErrorMessage(LANG_YOURS_SECURITY_IS_LOW);
+            return false;
+        }
+
+        // Check and abort if the target gm has a higher rank on one of the realms and the new realm is -1
+        if (gmRealmID == -1 && !AccountMgr::IsConsoleAccount(playerSecurity))
+        {
+            LoginDatabasePreparedStatement* stmt = LoginDatabase.GetPreparedStatement(LOGIN_SEL_ACCOUNT_ACCESS_GMLEVEL_TEST);
+
+            stmt->SetData(0, targetAccountId);
+            stmt->SetData(1, uint8(gm));
+
+            PreparedQueryResult result = LoginDatabase.Query(stmt);
+
+            if (result)
+            {
+                handler->SendErrorMessage(LANG_YOURS_SECURITY_IS_LOW);
+                return false;
+            }
+        }
+
+        // Check if provided realm.Id.Realm has a negative value other than -1
+        if (gmRealmID < -1)
+        {
+            handler->SendErrorMessage(LANG_INVALID_REALMID);
+            return false;
+        }
+
+        // If gmRealmID is -1, delete all values for the account id, else, insert values for the specific realm.Id.Realm
+        LoginDatabasePreparedStatement* stmt;
+
+        if (gmRealmID == -1)
+        {
+            stmt = LoginDatabase.GetPreparedStatement(LOGIN_DEL_ACCOUNT_ACCESS);
+            stmt->SetData(0, targetAccountId);
+        }
+        else
+        {
+            stmt = LoginDatabase.GetPreparedStatement(LOGIN_DEL_ACCOUNT_ACCESS_BY_REALM);
+            stmt->SetData(0, targetAccountId);
+            stmt->SetData(1, realm.Id.Realm);
+        }
+
+        LoginDatabase.Execute(stmt);
+
+        if (gm != 0)
+        {
+            stmt = LoginDatabase.GetPreparedStatement(LOGIN_INS_ACCOUNT_ACCESS);
+
+            stmt->SetData(0, targetAccountId);
+            stmt->SetData(1, uint8(gm));
+            stmt->SetData(2, gmRealmID);
+
+            LoginDatabase.Execute(stmt);
+            LOG_INFO("server.auth", "Player {} set GM level {} for account {}",
+                handler->GetSession() ? handler->GetSession()->GetPlayerName() : "Console",
+                gm, targetAccountName);
+        }
+
+        handler->PSendSysMessage(LANG_YOU_CHANGE_SECURITY, targetAccountName, gm);
+        return true;
+    }
+    /// Create an account
+    static bool HandleAccountCreateIngame(ChatHandler* handler, char const* args)
+    {
+        if (!*args)
+            return false;
+
+        ///- %Parse the command line arguments
+        char* accountName = strtok((char*)args, " ");
+        char* password = strtok(nullptr, " ");
+        char* email = strtok(nullptr, " ");
+
+        if (!accountName || !password)
+            return false;
+
+        // if email is not specified, use empty string
+        std::string emailStr = email ? email : "";
+
+        AccountOpResult result = AccountMgr::CreateAccount(std::string(accountName), std::string(password), emailStr);
+        switch (result)
+        {
+        case AOR_OK:
+            handler->PSendSysMessage(LANG_ACCOUNT_CREATED, accountName);
+            if (handler->GetSession())
+            {
+                LOG_DEBUG("warden", "Account: {} (IP: {}) Character:[{}] ({}) Change Password.",
+                    handler->GetSession()->GetAccountId(), handler->GetSession()->GetRemoteAddress(),
+                    handler->GetSession()->GetPlayer()->GetName(), handler->GetSession()->GetPlayer()->GetGUID().ToString());
+            }
+            break;
+        case AOR_NAME_TOO_LONG:
+            handler->SendErrorMessage(LANG_ACCOUNT_TOO_LONG);
+            return false;
+        case AOR_PASS_TOO_LONG:
+            handler->SendErrorMessage(LANG_ACCOUNT_PASS_TOO_LONG);
+            return false;
+        case AOR_NAME_ALREADY_EXIST:
+            handler->SendErrorMessage(LANG_ACCOUNT_ALREADY_EXIST);
+            return false;
+        case AOR_DB_INTERNAL_ERROR:
+            handler->SendErrorMessage(LANG_ACCOUNT_NOT_CREATED_SQL_ERROR, accountName);
+            return false;
+        default:
+            handler->SendErrorMessage(LANG_ACCOUNT_NOT_CREATED, accountName);
+            return false;
+        }
+
         return true;
     }
 };
@@ -951,4 +1144,5 @@ public:
 void AddSC_account_commandscript()
 {
     new account_commandscript();
+    new account_create();
 }

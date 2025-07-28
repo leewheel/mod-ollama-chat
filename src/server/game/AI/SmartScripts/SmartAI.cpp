@@ -241,7 +241,7 @@ void SmartAI::PausePath(uint32 delay, bool forced)
 
     if (HasEscortState(SMART_ESCORT_PAUSED))
     {
-        LOG_ERROR("scripts.ai.sai", "SmartAI::StartPath: Creature entry {} wanted to pause waypoint movement while already paused, ignoring.", me->GetEntry());
+        //LOG_ERROR("scripts.ai.sai", "SmartAI::StartPath: Creature entry {} wanted to pause waypoint movement while already paused, ignoring.", me->GetEntry());
         return;
     }
 
