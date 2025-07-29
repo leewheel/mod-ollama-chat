@@ -1,4 +1,4 @@
-#include "OllamaHttpClient.h"
+#include "mod-ollama-chat_httpclient.h"
 
 // Include cpp-httplib for HTTP functionality
 #include <httplib.h>
