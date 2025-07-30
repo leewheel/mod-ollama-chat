@@ -126,7 +126,7 @@
 
 - To use a Personality Pack, download or create a `.sql` file named in the format `YYYY_MM_DD_personality_pack_NAME.sql`.
 
-- Place the `.sql` file in `modules/mod-ollama-chat/data/sql/characters/base/`.
+- Place the `.sql` file in `modules/mod-ollama-chat/data/sql/characters/updates/`.
 
 - The module will automatically detect and apply any new Personality Packs when the server starts or updates—no manual SQL import required.
 
