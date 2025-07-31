@@ -68,7 +68,7 @@ void Acore::Banner::Show(std::string_view applicationName, void(*log)(std::strin
     log(" ##:::::::: ##::::::: ##.... ##:::: ##:::: ##::::::: ##::. ##:: ##:::: ##: ##:::: ##:::: ##::::'##::: ##:");
     log(" ##:::::::: ########: ##:::: ##:::: ##:::: ########: ##:::. ##: ########::. #######::::: ##::::. ######::");
     log("..:::::::::........::..:::::..:::::..:::::........::..:::::..::........::::.......::::::..::::::......:::\n");
-    log("巫妖王之怒PLAYERBOTS(基于liyunfan PB ->20250729) 仿官版本. 编译时间: " + FormatBuildDateTimeBaner(__DATE__, __TIME__) + "\n");
+    log("巫妖王之怒PLAYERBOTS(基于liyunfan PB ->20250731) 仿官版本. 编译时间: " + FormatBuildDateTimeBaner(__DATE__, __TIME__) + "\n");
 
 
     if (logExtraInfo)
