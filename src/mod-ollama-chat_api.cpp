@@ -1,6 +1,6 @@
 #include "mod-ollama-chat_api.h"
 #include "mod-ollama-chat_config.h"
-#include "OllamaHttpClient.h"
+#include "mod-ollama-chat_httpclient.h"
 #include "Log.h"
 #include <sstream>
 #include <nlohmann/json.hpp>
