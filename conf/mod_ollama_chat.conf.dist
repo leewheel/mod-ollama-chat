@@ -85,7 +85,7 @@ OllamaChat.NumCtx = 0
 
 # OllamaChat.NumThreads
 #     Description: Maximum number of threads the model should use to compute the request.
-#                  0 = model default. Use a value only if you want to restrict or change context from auto.
+#                  0 = model default. Use a value only if you want to restrict or change from auto.
 #                  
 #     Example:     OllamaChat.NumThreads = 2
 #     Default:     0
