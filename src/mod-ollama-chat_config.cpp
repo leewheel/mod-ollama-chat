@@ -5,7 +5,6 @@
 #include "mod-ollama-chat_api.h"
 #include <fmt/core.h>
 #include <sstream>
-#include <curl/curl.h>
 #include <fstream>
 
 
@@ -467,7 +466,6 @@ OllamaChatConfigWorldScript::OllamaChatConfigWorldScript() : WorldScript("Ollama
 
 void OllamaChatConfigWorldScript::OnStartup()
 {
-    curl_global_init(CURL_GLOBAL_ALL);
     LoadOllamaChatConfig();
     LoadBotPersonalityList();
     LoadBotConversationHistoryFromDB();

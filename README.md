@@ -51,15 +51,14 @@
 ## Installation
 
 > [!IMPORTANT]
-> Prerequisite dependencies have only been verified to work on macOS Monterey 12.7.6.  
-> If you encounter any issues or resolve problems related to dependencies on your OS, please open an issue describing the problem, the solution, and your OS version. I will update the README accordingly.
+> **Cross-Platform Support**: This module now uses cpp-httplib (header-only) instead of curl, eliminating compilation issues on Windows and simplifying installation on all platforms.
 
 1. **Prerequisites:**
    - Ensure you have liyunfan1223's AzerothCore (https://github.com/liyunfan1223/azerothcore-wotlk) installation with the Player Bots (https://github.com/liyunfan1223/mod-playerbots) module enabled.
    - The module depends on:
-     - cURL (https://curl.se/libcurl/)
-     - fmtlib (https://github.com/fmtlib/fmt)
-     - nlohmann/json (https://github.com/nlohmann/json)
+     - fmtlib (https://github.com/fmtlib/fmt) - For string formatting
+     - nlohmann/json (https://github.com/nlohmann/json) - For JSON processing
+     - cpp-httplib (https://github.com/yhirose/cpp-httplib) - Header-only HTTP library (included, no installation needed)
      - Ollama LLM support – set up a local instance of the Ollama API server with the model of your choice. More details at https://ollama.com
 
 2. **Clone the Module:**
