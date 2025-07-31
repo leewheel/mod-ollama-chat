@@ -41,6 +41,7 @@ extern float       g_OllamaTemperature;
 extern float       g_OllamaTopP;
 extern float       g_OllamaRepeatPenalty;
 extern uint32_t    g_OllamaNumCtx;
+extern uint32_t    g_OllamaNumThreads;
 extern std::string g_OllamaStop;
 extern std::string g_OllamaSystemPrompt;
 extern std::string g_OllamaSeed;
