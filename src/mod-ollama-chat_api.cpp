@@ -1,7 +1,7 @@
 #include "mod-ollama-chat_api.h"
 #include "mod-ollama-chat_config.h"
+#include "mod-ollama-chat_httpclient.h"
 #include "Log.h"
-#include <curl/curl.h>
 #include <sstream>
 #include <nlohmann/json.hpp>
 #include <fmt/core.h>
@@ -10,19 +10,10 @@
 #include <queue>
 #include <future>
 
-// Callback for cURL write function.
-static size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* userp)
-{
-    std::string* responseBuffer = static_cast<std::string*>(userp);
-    size_t totalSize = size * nmemb;
-    responseBuffer->append(static_cast<char*>(contents), totalSize);
-    return totalSize;
-}
-
 std::string ExtractTextBetweenDoubleQuotes(const std::string& response)
 {
-    size_t first = response.find('\"');
-    size_t second = response.find('\"', first + 1);
+    size_t first = response.find('"');
+    size_t second = response.find('"', first + 1);
     if (first != std::string::npos && second != std::string::npos) {
         return response.substr(first + 1, second - first - 1);
     }
@@ -32,12 +23,14 @@ std::string ExtractTextBetweenDoubleQuotes(const std::string& response)
 // Function to perform the API call.
 std::string QueryOllamaAPI(const std::string& prompt)
 {
-    CURL* curl = curl_easy_init();
-    if (!curl)
+    // Initialize our custom HTTP client
+    static OllamaHttpClient httpClient;
+    
+    if (!httpClient.IsAvailable())
     {
         if(g_DebugEnabled)
         {
-            LOG_INFO("server.loading", "[Ollama Chat] Failed to initialize cURL.");
+            LOG_INFO("server.loading", "[Ollama Chat] HTTP client not available.");
         }
         return "Hmm... I'm lost in thought.";
     }
@@ -85,29 +78,14 @@ std::string QueryOllamaAPI(const std::string& prompt)
 
     std::string requestDataStr = requestData.dump();
 
-    struct curl_slist* headers = nullptr;
-    headers = curl_slist_append(headers, "Content-Type: application/json");
+    // Make HTTP POST request using our custom client
+    std::string responseBuffer = httpClient.Post(url, requestDataStr);
 
-    std::string responseBuffer;
-    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-    curl_easy_setopt(curl, CURLOPT_POST, 1L);
-    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, requestDataStr.c_str());
-    curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, long(requestDataStr.length()));
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responseBuffer);
-    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-
-    CURLcode res = curl_easy_perform(curl);
-    curl_slist_free_all(headers);
-    curl_easy_cleanup(curl);
-
-    if (res != CURLE_OK)
+    if (responseBuffer.empty())
     {
         if(g_DebugEnabled)
         {
-            LOG_INFO("server.loading",
-                    "[Ollama Chat] Failed to reach Ollama AI. cURL error: {}",
-                    curl_easy_strerror(res));
+            LOG_INFO("server.loading", "[Ollama Chat] Failed to reach Ollama AI.");
         }
         return "Failed to reach Ollama AI.";
     }
