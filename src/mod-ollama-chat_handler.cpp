@@ -588,11 +588,25 @@ void PlayerBotChatHandler::ProcessChat(Player* player, uint32_t /*type*/, uint32
     // Handle different chat sources differently
     if (sourceLocal == SRC_WHISPER_LOCAL && receiver != nullptr)
     {
+        if(g_DebugEnabled)
+        {
+            LOG_INFO("server.loading", "[Ollama Chat] Processing whisper from {} to {}", 
+                    player->GetName(), receiver->GetName());
+        }
         // For whispers, only the receiver bot can respond (if it's a bot)
         PlayerbotAI* receiverAI = sPlayerbotsMgr->GetPlayerbotAI(receiver);
         if (receiverAI && receiverAI->IsBotAI())
         {
             eligibleBots.push_back(receiver);
+            if(g_DebugEnabled)
+            {
+                LOG_INFO("server.loading", "[Ollama Chat] Found eligible bot {} for whisper", receiver->GetName());
+            }
+        }
+        else if(g_DebugEnabled)
+        {
+            LOG_INFO("server.loading", "[Ollama Chat] Whisper target {} is not a bot or has no AI", 
+                    receiver->GetName());
         }
     }
     else if (channel != nullptr)
@@ -714,7 +728,8 @@ void PlayerBotChatHandler::ProcessChat(Player* player, uint32_t /*type*/, uint32
             {
                 continue;
             }
-            if (urand(0, 99) < chance)
+            // For whispers, always respond (don't use probability)
+            if (sourceLocal == SRC_WHISPER_LOCAL || urand(0, 99) < chance)
             {
                 finalCandidates.push_back(bot);
             }
@@ -726,7 +741,10 @@ void PlayerBotChatHandler::ProcessChat(Player* player, uint32_t /*type*/, uint32
     {
         if(g_DebugEnabled)
         {
-            LOG_INFO("server.loading", "[Ollama Chat] No eligible bots found to respond to message '{}'.", msg);
+            LOG_INFO("server.loading", "[Ollama Chat] No eligible bots found to respond to message '{}'. "
+                    "Source: {}, Eligible bots: {}, Candidate bots: {}, Combat disabled: {}",
+                    msg, ChatChannelSourceLocalStr[sourceLocal], eligibleBots.size(), 
+                    candidateBots.size(), g_DisableRepliesInCombat);
         }
         return;
     }
@@ -835,7 +853,16 @@ void PlayerBotChatHandler::ProcessChat(Player* player, uint32_t /*type*/, uint32
                                 Player* originalSender = ObjectAccessor::FindPlayer(ObjectGuid(senderGuid));
                                 if (originalSender)
                                 {
+                                    if(g_DebugEnabled)
+                                    {
+                                        LOG_INFO("server.loading", "[Ollama Chat] Bot {} whispering response '{}' to {}", 
+                                                botPtr->GetName(), response, originalSender->GetName());
+                                    }
                                     botAI->Whisper(response, originalSender->GetName());
+                                }
+                                else if(g_DebugEnabled)
+                                {
+                                    LOG_ERROR("server.loading", "[Ollama Chat] Cannot whisper response - original sender not found for GUID {}", senderGuid);
                                 }
                             }
                             break;
