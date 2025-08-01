@@ -48,6 +48,7 @@ std::string QueryOllamaAPI(const std::string& prompt)
     if (g_OllamaTopP != 0.95f)           requestData["top_p"]           = g_OllamaTopP;
     if (g_OllamaRepeatPenalty != 1.1f)   requestData["repeat_penalty"]  = g_OllamaRepeatPenalty;
     if (g_OllamaNumCtx > 0)              requestData["num_ctx"]         = g_OllamaNumCtx;
+    if (g_OllamaNumThreads > 0)          requestData["num_thread"]     = g_OllamaNumThreads;
     if (!g_OllamaStop.empty()) {
         // If comma-separated, convert to array
         std::vector<std::string> stopSeqs;
