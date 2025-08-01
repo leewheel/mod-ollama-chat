@@ -279,6 +279,9 @@ void LoadOllamaChatConfig()
     g_OllamaSystemPrompt              = sConfigMgr->GetOption<std::string>("OllamaChat.SystemPrompt", "");
     g_OllamaSeed                      = sConfigMgr->GetOption<std::string>("OllamaChat.Seed", "");
 
+    // Debug logging for NumThreads configuration
+    LOG_INFO("server.loading", "[Ollama Chat] Config loaded - NumThreads: {}", g_OllamaNumThreads);
+
     g_MaxConcurrentQueries            = sConfigMgr->GetOption<uint32_t>("OllamaChat.MaxConcurrentQueries", 0);
 
     g_Enable                          = sConfigMgr->GetOption<bool>("OllamaChat.Enable", true);

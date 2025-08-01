@@ -48,7 +48,7 @@
 
 // Forward declarations for internal helper functions.
 static bool IsBotEligibleForChatChannelLocal(Player* bot, Player* player,
-                                             ChatChannelSourceLocal source, Channel* channel = nullptr);
+                                             ChatChannelSourceLocal source, Channel* channel = nullptr, Player* receiver = nullptr);
 static std::string GenerateBotPrompt(Player* bot, std::string playerMessage, Player* player);
 
 const char* ChatChannelSourceLocalStr[] =
@@ -56,9 +56,11 @@ const char* ChatChannelSourceLocalStr[] =
     "Undefined",
     "Say",
     "Party",
-    "Raid",
+    "Raid", 
     "Guild",
+    "Officer",
     "Yell",
+    "Whisper",
     "General"
 };
 
@@ -79,17 +81,26 @@ ChatChannelSourceLocal GetChannelSourceLocal(uint32_t type)
 {
     switch (type)
     {
-        case 1:
+        case CHAT_MSG_SAY:
             return SRC_SAY_LOCAL;
-        case 51:
+        case CHAT_MSG_PARTY:
+        case CHAT_MSG_PARTY_LEADER:
             return SRC_PARTY_LOCAL;
-        case 3:
+        case CHAT_MSG_RAID:
+        case CHAT_MSG_RAID_LEADER:
+        case CHAT_MSG_RAID_WARNING:
             return SRC_RAID_LOCAL;
-        case 5:
+        case CHAT_MSG_GUILD:
             return SRC_GUILD_LOCAL;
-        case 6:
+        case CHAT_MSG_OFFICER:
+            return SRC_OFFICER_LOCAL;
+        case CHAT_MSG_YELL:
             return SRC_YELL_LOCAL;
-        case 17:
+        case CHAT_MSG_WHISPER:
+        case CHAT_MSG_WHISPER_FOREIGN:
+        case CHAT_MSG_WHISPER_INFORM:
+            return SRC_WHISPER_LOCAL;
+        case CHAT_MSG_CHANNEL:
             return SRC_GENERAL_LOCAL;
         default:
             return SRC_UNDEFINED_LOCAL;
@@ -116,7 +127,7 @@ void PlayerBotChatHandler::OnPlayerChat(Player* player, uint32_t type, uint32_t 
         return;
 
     ChatChannelSourceLocal sourceLocal = GetChannelSourceLocal(type);
-    ProcessChat(player, type, lang, msg, sourceLocal, nullptr);
+    ProcessChat(player, type, lang, msg, sourceLocal, nullptr, nullptr);
 }
 
 void PlayerBotChatHandler::OnPlayerChat(Player* player, uint32_t type, uint32_t lang, std::string& msg, Group* /*group*/)
@@ -125,7 +136,16 @@ void PlayerBotChatHandler::OnPlayerChat(Player* player, uint32_t type, uint32_t 
         return;
 
     ChatChannelSourceLocal sourceLocal = GetChannelSourceLocal(type);
-    ProcessChat(player, type, lang, msg, sourceLocal, nullptr);
+    ProcessChat(player, type, lang, msg, sourceLocal, nullptr, nullptr);
+}
+
+void PlayerBotChatHandler::OnPlayerChat(Player* player, uint32_t type, uint32_t lang, std::string& msg, Guild* /*guild*/)
+{
+    if (!g_Enable)
+        return;
+
+    ChatChannelSourceLocal sourceLocal = GetChannelSourceLocal(type);
+    ProcessChat(player, type, lang, msg, sourceLocal, nullptr, nullptr);
 }
 
 void PlayerBotChatHandler::OnPlayerChat(Player* player, uint32_t type, uint32_t lang, std::string& msg, Channel* channel)
@@ -134,7 +154,16 @@ void PlayerBotChatHandler::OnPlayerChat(Player* player, uint32_t type, uint32_t 
         return;
 
     ChatChannelSourceLocal sourceLocal = GetChannelSourceLocal(type);
-    ProcessChat(player, type, lang, msg, sourceLocal, channel);
+    ProcessChat(player, type, lang, msg, sourceLocal, channel, nullptr);
+}
+
+void PlayerBotChatHandler::OnPlayerChat(Player* player, uint32_t type, uint32_t lang, std::string& msg, Player* receiver)
+{
+    if (!g_Enable)
+        return;
+
+    ChatChannelSourceLocal sourceLocal = GetChannelSourceLocal(type);
+    ProcessChat(player, type, lang, msg, sourceLocal, nullptr, receiver);
 }
 
 void AppendBotConversation(uint64_t botGuid, uint64_t playerGuid, const std::string& playerMessage, const std::string& botReply)
@@ -519,7 +548,7 @@ static std::string GenerateBotGameStateSnapshot(Player* bot)
 }
 
 
-void PlayerBotChatHandler::ProcessChat(Player* player, uint32_t /*type*/, uint32_t /*lang*/, std::string& msg, ChatChannelSourceLocal sourceLocal, Channel* channel)
+void PlayerBotChatHandler::ProcessChat(Player* player, uint32_t /*type*/, uint32_t /*lang*/, std::string& msg, ChatChannelSourceLocal sourceLocal, Channel* channel, Player* receiver)
 {
     if (player == nullptr) {
         LOG_ERROR("server.loading", "[Ollama Chat] ProcessChat: player is null");
@@ -530,11 +559,12 @@ void PlayerBotChatHandler::ProcessChat(Player* player, uint32_t /*type*/, uint32
     }
     std::string chanName = (channel != nullptr) ? channel->GetName() : "Unknown";
     uint32_t channelId = (channel != nullptr) ? channel->GetChannelId() : 0;
+    std::string receiverName = (receiver != nullptr) ? receiver->GetName() : "None";
     if(g_DebugEnabled)
     {
         LOG_INFO("server.loading",
-                "[Ollama Chat] Player {} sent msg: '{}' | Channel Name: {} | Channel ID: {}",
-                player->GetName(), msg, chanName, channelId);
+                "[Ollama Chat] Player {} sent msg: '{}' | Source: {} | Channel Name: {} | Channel ID: {} | Receiver: {}",
+                player->GetName(), msg, (int)sourceLocal, chanName, channelId, receiverName);
     }
 
     std::string trimmedMsg = rtrim(msg);
@@ -554,8 +584,20 @@ void PlayerBotChatHandler::ProcessChat(Player* player, uint32_t /*type*/, uint32
     bool senderIsBot = (senderAI && senderAI->IsBotAI());
     
     std::vector<Player*> eligibleBots;
-    if (channel != nullptr)
+    
+    // Handle different chat sources differently
+    if (sourceLocal == SRC_WHISPER_LOCAL && receiver != nullptr)
     {
+        // For whispers, only the receiver bot can respond (if it's a bot)
+        PlayerbotAI* receiverAI = sPlayerbotsMgr->GetPlayerbotAI(receiver);
+        if (receiverAI && receiverAI->IsBotAI())
+        {
+            eligibleBots.push_back(receiver);
+        }
+    }
+    else if (channel != nullptr)
+    {
+        // For channel chat, find all bots that are in the same specific channel
         ChannelMgr* cMgr = ChannelMgr::forTeam(static_cast<TeamId>(player->GetTeamId()));
         Channel* senderChannel = cMgr->GetChannel(channel->GetName(), player);
         if (senderChannel)
@@ -566,6 +608,13 @@ void PlayerBotChatHandler::ProcessChat(Player* player, uint32_t /*type*/, uint32
                 Player* candidate = itr.second;
                 if (!candidate->IsInWorld())
                     continue;
+                if (candidate == player)
+                    continue;
+                    
+                PlayerbotAI* candidateAI = sPlayerbotsMgr->GetPlayerbotAI(candidate);
+                if (!candidateAI || !candidateAI->IsBotAI())
+                    continue;
+                    
                 ChannelMgr* candidateCM = ChannelMgr::forTeam(static_cast<TeamId>(candidate->GetTeamId()));
                 Channel* candidateChannel = candidateCM->GetChannel(channel->GetName(), candidate);
                 if (candidateChannel && candidateChannel->GetChannelId() == senderChannel->GetChannelId())
@@ -577,12 +626,19 @@ void PlayerBotChatHandler::ProcessChat(Player* player, uint32_t /*type*/, uint32
     }
     else
     {
+        // For other chat types (say, yell, guild, party, etc.), use all players and filter by eligibility
         auto const& allPlayers = ObjectAccessor::GetPlayers();
         for (auto const& itr : allPlayers)
         {
             Player* candidate = itr.second;
-            if (candidate->IsInWorld())
-                eligibleBots.push_back(candidate);
+            if (candidate->IsInWorld() && candidate != player)
+            {
+                PlayerbotAI* candidateAI = sPlayerbotsMgr->GetPlayerbotAI(candidate);
+                if (candidateAI && candidateAI->IsBotAI())
+                {
+                    eligibleBots.push_back(candidate);
+                }
+            }
         }
     }
     
@@ -593,7 +649,7 @@ void PlayerBotChatHandler::ProcessChat(Player* player, uint32_t /*type*/, uint32
         {
             continue;
         }
-        if (IsBotEligibleForChatChannelLocal(bot, player, sourceLocal, channel))
+        if (IsBotEligibleForChatChannelLocal(bot, player, sourceLocal, channel, receiver))
             candidateBots.push_back(bot);
     }
     
@@ -755,12 +811,37 @@ void PlayerBotChatHandler::ProcessChat(Player* player, uint32_t /*type*/, uint32
                 {
                     switch (sourceLocal)
                     {
-                        case SRC_GUILD_LOCAL: botAI->SayToGuild(response); break;
-                        case SRC_PARTY_LOCAL: botAI->SayToParty(response); break;
-                        case SRC_RAID_LOCAL:  botAI->SayToRaid(response); break;
-                        case SRC_SAY_LOCAL:   botAI->Say(response); break;
-                        case SRC_YELL_LOCAL:  botAI->Yell(response); break;
-                        default:              botAI->Say(response); break;
+                        case SRC_GUILD_LOCAL: 
+                            botAI->SayToGuild(response); 
+                            break;
+                        case SRC_OFFICER_LOCAL: 
+                            botAI->SayToOfficer(response); 
+                            break;
+                        case SRC_PARTY_LOCAL: 
+                            botAI->SayToParty(response); 
+                            break;
+                        case SRC_RAID_LOCAL:  
+                            botAI->SayToRaid(response); 
+                            break;
+                        case SRC_SAY_LOCAL:   
+                            botAI->Say(response); 
+                            break;
+                        case SRC_YELL_LOCAL:  
+                            botAI->Yell(response); 
+                            break;
+                        case SRC_WHISPER_LOCAL:
+                            // For whispers, find the original sender and whisper back
+                            {
+                                Player* originalSender = ObjectAccessor::FindPlayer(ObjectGuid(senderGuid));
+                                if (originalSender)
+                                {
+                                    botAI->Whisper(response, originalSender);
+                                }
+                            }
+                            break;
+                        default:              
+                            botAI->Say(response); 
+                            break;
                     }
                 }
                 
@@ -786,40 +867,57 @@ void PlayerBotChatHandler::ProcessChat(Player* player, uint32_t /*type*/, uint32
     }
 }
 
-static bool IsBotEligibleForChatChannelLocal(Player* bot, Player* player, ChatChannelSourceLocal source, Channel* channel)
+static bool IsBotEligibleForChatChannelLocal(Player* bot, Player* player, ChatChannelSourceLocal source, Channel* channel, Player* receiver)
 {
     if (!bot || !player || bot == player)
         return false;
-    if (bot->GetTeamId() != player->GetTeamId())
-        return false;
     if (!sPlayerbotsMgr->GetPlayerbotAI(bot))
         return false;
+        
+    // For whispers, only the specific receiver should respond
+    if (source == SRC_WHISPER_LOCAL)
+    {
+        return (receiver && bot == receiver);
+    }
+    
+    // Check team compatibility for non-whisper chats (except channels which can be cross-faction)
+    if (!channel && bot->GetTeamId() != player->GetTeamId())
+        return false;
+    
+    // For channels, check if bot is in the channel (already filtered above, but double-check)
     if (channel && !bot->IsInChannel(channel))
         return false;
     
     bool isInParty = (player->GetGroup() && bot->GetGroup() && (player->GetGroup() == bot->GetGroup()));
     float threshold = 0.0f;
+    
     switch (source)
     {
-        case SRC_SAY_LOCAL:    threshold = g_SayDistance;     break;
-        case SRC_YELL_LOCAL:   threshold = g_YellDistance;    break;
-        case SRC_GENERAL_LOCAL:threshold = g_GeneralDistance; break;
-        default:               threshold = 0.0f;              break;
-    }
-    switch (source)
-    {
+        case SRC_SAY_LOCAL:    
+            threshold = g_SayDistance;
+            return (threshold > 0.0f && player->GetDistance(bot) <= threshold);
+            
+        case SRC_YELL_LOCAL:   
+            threshold = g_YellDistance;
+            return (threshold > 0.0f && player->GetDistance(bot) <= threshold);
+            
         case SRC_GUILD_LOCAL:
+        case SRC_OFFICER_LOCAL:
             return (player->GetGuild() && bot->GetGuildId() == player->GetGuildId());
+            
         case SRC_PARTY_LOCAL:
-            return isInParty;
         case SRC_RAID_LOCAL:
             return isInParty;
-        case SRC_SAY_LOCAL:
-            return (threshold > 0.0f && player->GetDistance(bot) > threshold) ? false : true;
-        case SRC_YELL_LOCAL:
-            return (threshold > 0.0f && player->GetDistance(bot) > threshold) ? false : true;
+            
+        case SRC_WHISPER_LOCAL:
+            // Already handled above
+            return false;
+            
         case SRC_GENERAL_LOCAL:
-            return (threshold > 0.0f && player->GetDistance(bot) > threshold) ? false : true;
+            // For channels like General, Trade, etc., no distance check - only channel membership matters
+            // Channel membership was already checked above
+            return true;
+            
         default:
             return false;
     }

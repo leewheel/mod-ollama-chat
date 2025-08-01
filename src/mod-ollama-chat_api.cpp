@@ -40,7 +40,8 @@ std::string QueryOllamaAPI(const std::string& prompt)
 
     nlohmann::json requestData = {
         {"model",  model},
-        {"prompt", prompt}
+        {"prompt", prompt},
+        {"stream", false}
     };
 
     // Create options object for model parameters
@@ -71,6 +72,11 @@ std::string QueryOllamaAPI(const std::string& prompt)
     if (g_OllamaNumThreads > 0) {
         options["num_thread"] = g_OllamaNumThreads;
         hasOptions = true;
+        if(g_DebugEnabled) {
+            LOG_INFO("server.loading", "[Ollama Chat] Setting num_thread to: {}", g_OllamaNumThreads);
+        }
+    } else if(g_DebugEnabled) {
+        LOG_INFO("server.loading", "[Ollama Chat] g_OllamaNumThreads is: {} (not sending num_thread)", g_OllamaNumThreads);
     }
     if (!g_OllamaSeed.empty()) {
         try {
@@ -118,6 +124,11 @@ std::string QueryOllamaAPI(const std::string& prompt)
     }
 
     std::string requestDataStr = requestData.dump();
+
+    if(g_DebugEnabled)
+    {
+        LOG_INFO("server.loading", "[Ollama Chat] Request JSON: {}", requestDataStr);
+    }
 
     // Make HTTP POST request using our custom client
     std::string responseBuffer = httpClient.Post(url, requestDataStr);
