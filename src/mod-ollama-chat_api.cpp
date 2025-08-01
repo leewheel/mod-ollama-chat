@@ -73,10 +73,10 @@ std::string QueryOllamaAPI(const std::string& prompt)
         options["num_thread"] = g_OllamaNumThreads;
         hasOptions = true;
         if(g_DebugEnabled) {
-            LOG_INFO("server.loading", "[Ollama Chat] Setting num_thread to: {}", g_OllamaNumThreads);
+            //LOG_INFO("server.loading", "[Ollama Chat] Setting num_thread to: {}", g_OllamaNumThreads);
         }
     } else if(g_DebugEnabled) {
-        LOG_INFO("server.loading", "[Ollama Chat] g_OllamaNumThreads is: {} (not sending num_thread)", g_OllamaNumThreads);
+        //LOG_INFO("server.loading", "[Ollama Chat] g_OllamaNumThreads is: {} (not sending num_thread)", g_OllamaNumThreads);
     }
     if (!g_OllamaSeed.empty()) {
         try {
