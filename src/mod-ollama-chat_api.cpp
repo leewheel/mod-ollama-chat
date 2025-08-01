@@ -127,7 +127,7 @@ std::string QueryOllamaAPI(const std::string& prompt)
 
     if(g_DebugEnabled)
     {
-        LOG_INFO("server.loading", "[Ollama Chat] Request JSON: {}", requestDataStr);
+        LOG_INFO("server.loading", "[Ollama Chat] Request JSON: {}", fmt::runtime(requestDataStr));
     }
 
     // Make HTTP POST request using our custom client
