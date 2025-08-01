@@ -162,6 +162,18 @@ void PlayerBotChatHandler::OnPlayerChat(Player* player, uint32_t type, uint32_t 
     if (!g_Enable)
         return;
 
+    if (type == CHAT_MSG_WHISPER && receiver)
+    {
+        PlayerbotAI* receiverAI = sPlayerbotsMgr->GetPlayerbotAI(receiver);
+        if (receiverAI && receiverAI->IsBotAI())
+        {
+            // Process as whisper TO bot
+            ChatChannelSourceLocal sourceLocal = GetChannelSourceLocal(type);
+            ProcessChat(player, type, lang, msg, sourceLocal, nullptr, receiver);
+        }
+        return;
+    }
+
     ChatChannelSourceLocal sourceLocal = GetChannelSourceLocal(type);
     ProcessChat(player, type, lang, msg, sourceLocal, nullptr, receiver);
 }
@@ -935,10 +947,6 @@ static bool IsBotEligibleForChatChannelLocal(Player* bot, Player* player, ChatCh
         case SRC_PARTY_LOCAL:
         case SRC_RAID_LOCAL:
             return isInParty;
-            
-        case SRC_WHISPER_LOCAL:
-            // Already handled above
-            return false;
             
         case SRC_GENERAL_LOCAL:
             // For channels like General, Trade, etc., no distance check - only channel membership matters
