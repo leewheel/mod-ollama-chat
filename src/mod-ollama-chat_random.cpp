@@ -109,6 +109,7 @@ void OllamaBotRandomChatter::HandleRandomChatter()
                 continue;
             }
 
+            PlayerbotAI* ai = sPlayerbotsMgr->GetPlayerbotAI(bot);
             uint64_t guid = bot->GetGUID().GetRawValue();
 
             processedBotsThisTick.insert(guid);
