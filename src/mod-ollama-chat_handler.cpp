@@ -835,7 +835,7 @@ void PlayerBotChatHandler::ProcessChat(Player* player, uint32_t /*type*/, uint32
                                 Player* originalSender = ObjectAccessor::FindPlayer(ObjectGuid(senderGuid));
                                 if (originalSender)
                                 {
-                                    botAI->Whisper(response, originalSender);
+                                    botAI->Whisper(response, originalSender->GetName());
                                 }
                             }
                             break;
