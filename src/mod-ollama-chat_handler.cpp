@@ -815,7 +815,7 @@ void PlayerBotChatHandler::ProcessChat(Player* player, uint32_t /*type*/, uint32
                             botAI->SayToGuild(response); 
                             break;
                         case SRC_OFFICER_LOCAL: 
-                            botAI->SayToOfficer(response); 
+                            botAI->SayToGuild(response); 
                             break;
                         case SRC_PARTY_LOCAL: 
                             botAI->SayToParty(response); 
