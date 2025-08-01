@@ -125,11 +125,6 @@ std::string QueryOllamaAPI(const std::string& prompt)
 
     std::string requestDataStr = requestData.dump();
 
-    if(g_DebugEnabled)
-    {
-        LOG_INFO("server.loading", "[Ollama Chat] Request JSON: {}", fmt::runtime(requestDataStr));
-    }
-
     // Make HTTP POST request using our custom client
     std::string responseBuffer = httpClient.Post(url, requestDataStr);
 
