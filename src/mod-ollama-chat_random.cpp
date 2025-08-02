@@ -16,6 +16,7 @@
 #include "CellImpl.h"
 #include "Map.h"
 #include "GridNotifiers.h"
+#include "Guild.h"
 #include <vector>
 #include <random>
 #include <thread>
@@ -428,6 +429,67 @@ void OllamaBotRandomChatter::HandleRandomChatter()
                 }
             }
 
+            // Guild-specific environment comments (if bot is in a guild with real players)
+            if (g_EnableGuildRandomChatter && bot->GetGuild())
+            {
+                // Check if there are real players in the guild
+                bool hasRealPlayerInGuild = false;
+                Guild* guild = bot->GetGuild();
+                for (auto const& pair : ObjectAccessor::GetPlayers())
+                {
+                    Player* player = pair.second;
+                    if (!player || !player->IsInWorld())
+                        continue;
+                        
+                    if (sPlayerbotsMgr->GetPlayerbotAI(player))
+                        continue;
+                        
+                    if (player->GetGuild() && player->GetGuild()->GetId() == guild->GetId())
+                    {
+                        hasRealPlayerInGuild = true;
+                        break;
+                    }
+                }
+                
+                if (hasRealPlayerInGuild)
+                {
+                    // Add guild environment comments
+                    std::vector<std::string> guildComments;
+                    
+                    // Guild member comments
+                    if (!g_GuildEnvCommentGuildMember.empty())
+                    {
+                        // Use the bot's own name as a guild member reference
+                        std::string memberName = bot->GetName();
+                        if (!memberName.empty())
+                        {
+                            uint32_t idx = urand(0, g_GuildEnvCommentGuildMember.size() - 1);
+                            std::string templ = g_GuildEnvCommentGuildMember[idx];
+                            guildComments.push_back(SafeFormat(templ, fmt::arg("member_name", memberName)));
+                        }
+                    }
+
+                    // Guild MOTD comments
+                    if (!g_GuildEnvCommentGuildMOTD.empty() && !guild->GetMOTD().empty())
+                    {
+                        uint32_t idx = urand(0, g_GuildEnvCommentGuildMOTD.size() - 1);
+                        std::string templ = g_GuildEnvCommentGuildMOTD[idx];
+                        guildComments.push_back(SafeFormat(templ, fmt::arg("guild_motd", guild->GetMOTD())));
+                    }
+
+                    // Guild bank comments
+                    if (!g_GuildEnvCommentGuildBank.empty())
+                    {
+                        uint32_t idx = urand(0, g_GuildEnvCommentGuildBank.size() - 1);
+                        std::string templ = g_GuildEnvCommentGuildBank[idx];
+                        guildComments.push_back(SafeFormat(templ, 
+                            fmt::arg("bank_gold", guild->GetTotalBankMoney() / 10000)));
+                    }
+                    
+                    candidateComments.insert(candidateComments.end(), guildComments.begin(), guildComments.end());
+                }
+            }
+
             if (!candidateComments.empty())
             {
                 uint32_t index = candidateComments.size() == 1 ? 0 : urand(0, candidateComments.size() - 1);
@@ -500,6 +562,51 @@ void OllamaBotRandomChatter::HandleRandomChatter()
                     if (!botAI) return;
                     if (botPtr->GetGroup())
                         botAI->SayToParty(response);
+                    else if (botPtr->GetGuild() && g_EnableGuildRandomChatter)
+                    {
+                        // Check if there are real players in the guild
+                        bool hasRealPlayerInGuild = false;
+                        Guild* guild = botPtr->GetGuild();
+                        for (auto const& pair : ObjectAccessor::GetPlayers())
+                        {
+                            Player* player = pair.second;
+                            if (!player || !player->IsInWorld())
+                                continue;
+                                
+                            if (sPlayerbotsMgr->GetPlayerbotAI(player))
+                                continue;
+                                
+                            if (player->GetGuild() && player->GetGuild()->GetId() == guild->GetId())
+                            {
+                                hasRealPlayerInGuild = true;
+                                break;
+                            }
+                        }
+                        
+                        if (hasRealPlayerInGuild)
+                        {
+                            // For bots in guilds with real players, randomly choose between guild, general, or say
+                            std::vector<std::string> channels = {"Guild", "General", "Say"};
+                            std::random_device rd;
+                            std::mt19937 gen(rd());
+                            std::uniform_int_distribution<size_t> dist(0, channels.size() - 1);
+                            std::string selectedChannel = channels[dist(gen)];
+                            
+                            if (selectedChannel == "Guild") {
+                                if (g_DebugEnabled)
+                                    LOG_INFO("server.loading", "[Ollama Chat] Bot Random Chatter Guild: {}", response);
+                                botAI->SayToGuild(response);
+                            } else if (selectedChannel == "Say") {
+                                if (g_DebugEnabled)
+                                    LOG_INFO("server.loading", "[Ollama Chat] Bot Random Chatter Say: {}", response);
+                                botAI->Say(response);
+                            } else if (selectedChannel == "General") {
+                                if (g_DebugEnabled)
+                                    LOG_INFO("server.loading", "[Ollama Chat] Bot Random Chatter General: {}", response);
+                                botAI->SayToChannel(response, ChatChannelId::GENERAL);
+                            }
+                        }
+                    }
                     else {
                         std::vector<std::string> channels = {"General", "Say"};
                         std::random_device rd;
