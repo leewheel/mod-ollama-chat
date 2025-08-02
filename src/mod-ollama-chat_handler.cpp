@@ -126,6 +126,10 @@ void PlayerBotChatHandler::OnPlayerChat(Player* player, uint32_t type, uint32_t 
     if (!g_Enable)
         return;
 
+    // Skip whispers here since they're handled by OnPlayerChat with receiver parameter
+    if (type == CHAT_MSG_WHISPER)
+        return;
+
     ChatChannelSourceLocal sourceLocal = GetChannelSourceLocal(type);
     ProcessChat(player, type, lang, msg, sourceLocal, nullptr, nullptr);
 }
@@ -159,10 +163,6 @@ void PlayerBotChatHandler::OnPlayerChat(Player* player, uint32_t type, uint32_t 
 
 void PlayerBotChatHandler::OnPlayerChat(Player* player, uint32_t type, uint32_t lang, std::string& msg, Player* receiver)
 {
-    // ALWAYS log this to see if whisper handler is being called
-    LOG_INFO("server.loading", "[Ollama Chat] OnPlayerChat with receiver called: player={}, type={}, receiver={}", 
-            player->GetName(), type, receiver ? receiver->GetName() : "null");
-
     if (!g_Enable)
         return;
 
@@ -174,22 +174,13 @@ void PlayerBotChatHandler::OnPlayerChat(Player* player, uint32_t type, uint32_t 
 
     if (type == CHAT_MSG_WHISPER && receiver)
     {
-        LOG_INFO("server.loading", "[Ollama Chat] Processing whisper from {} to {}", 
-                player->GetName(), receiver->GetName());
         
         PlayerbotAI* receiverAI = sPlayerbotsMgr->GetPlayerbotAI(receiver);
         if (receiverAI && receiverAI->IsBotAI())
         {
-            LOG_INFO("server.loading", "[Ollama Chat] Receiver {} is a bot, processing whisper", 
-                    receiver->GetName());
             // Process as whisper TO bot
             ChatChannelSourceLocal sourceLocal = GetChannelSourceLocal(type);
             ProcessChat(player, type, lang, msg, sourceLocal, nullptr, receiver);
-        }
-        else
-        {
-            LOG_INFO("server.loading", "[Ollama Chat] Receiver {} is not a bot", 
-                    receiver->GetName());
         }
         return;
     }
