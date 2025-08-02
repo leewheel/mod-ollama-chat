@@ -157,9 +157,46 @@ void PlayerBotChatHandler::OnPlayerChat(Player* player, uint32_t type, uint32_t 
     ProcessChat(player, type, lang, msg, sourceLocal, channel, nullptr);
 }
 
+bool PlayerBotChatHandler::OnPlayerCanUseChat(Player* player, uint32_t type, uint32_t lang, std::string& msg, Player* receiver)
+{
+    // Only handle whispers for our module
+    if (type != CHAT_MSG_WHISPER)
+        return true;
+    
+    // Only process if our module is enabled
+    if (!g_Enable)
+        return true;
+    
+    // Check if this is a valid whisper to a bot
+    if (!receiver || !player || player == receiver)
+        return true;
+    
+    PlayerbotAI* receiverAI = sPlayerbotsMgr->GetPlayerbotAI(receiver);
+    if (!receiverAI || !receiverAI->IsBotAI())
+        return true;
+    
+    if (g_DebugEnabled)
+    {
+        LOG_INFO("server.loading", "[Ollama Chat] OnPlayerCanUseChat called: player={}, type={}, receiver={}", 
+                player->GetName(), type, receiver ? receiver->GetName() : "null");
+    }
+    
+    // Process the chat immediately in OnPlayerCanUseChat to prevent double processing
+    ChatChannelSourceLocal sourceLocal = GetChannelSourceLocal(type);
+    ProcessChat(player, type, lang, msg, sourceLocal, nullptr, receiver);
+    
+    // Return false to prevent the message from being processed again in OnPlayerChat
+    return false;
+}
+
 void PlayerBotChatHandler::OnPlayerChat(Player* player, uint32_t type, uint32_t lang, std::string& msg, Player* receiver)
 {
+    // This method should now only handle non-whisper messages or cases where OnPlayerCanUseChat returned true
     if (!g_Enable)
+        return;
+
+    // Skip whispers since they're handled in OnPlayerCanUseChat
+    if (type == CHAT_MSG_WHISPER)
         return;
 
     if(g_DebugEnabled)
@@ -168,21 +205,9 @@ void PlayerBotChatHandler::OnPlayerChat(Player* player, uint32_t type, uint32_t 
                 player->GetName(), type, receiver ? receiver->GetName() : "null");
     }
 
-    if (type == CHAT_MSG_WHISPER && receiver && player && player!= receiver)
-    {
-        
-        PlayerbotAI* receiverAI = sPlayerbotsMgr->GetPlayerbotAI(receiver);
-        if (receiverAI && receiverAI->IsBotAI())
-        {
-            // Process as whisper TO bot
-            ChatChannelSourceLocal sourceLocal = GetChannelSourceLocal(type);
-            ProcessChat(player, type, lang, msg, sourceLocal, nullptr, receiver);
-        }
-        return;
-    }
-
-    // ChatChannelSourceLocal sourceLocal = GetChannelSourceLocal(type);
-    // ProcessChat(player, type, lang, msg, sourceLocal, nullptr, receiver);
+    // Handle other chat types (non-whisper)
+    ChatChannelSourceLocal sourceLocal = GetChannelSourceLocal(type);
+    ProcessChat(player, type, lang, msg, sourceLocal, nullptr, receiver);
 }
 
 void AppendBotConversation(uint64_t botGuid, uint64_t playerGuid, const std::string& playerMessage, const std::string& botReply)
