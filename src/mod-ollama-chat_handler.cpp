@@ -186,7 +186,7 @@ bool PlayerBotChatHandler::OnPlayerCanUseChat(Player* player, uint32_t type, uin
     ProcessChat(player, type, lang, msg, sourceLocal, nullptr, receiver);
     
     // Return false to prevent the message from being processed again in OnPlayerChat
-    return false;
+    return true;
 }
 
 void PlayerBotChatHandler::OnPlayerChat(Player* player, uint32_t type, uint32_t lang, std::string& msg, Player* receiver)
