@@ -1,4 +1,5 @@
 #include "mod-ollama-chat_httpclient.h"
+#include "mod-ollama-chat_config.h"
 
 // Include cpp-httplib for HTTP functionality
 #include <httplib.h>
@@ -8,9 +9,9 @@
 #include <regex>
 
 OllamaHttpClient::OllamaHttpClient()
-    : m_timeout(30), m_available(true)
+    : m_timeout(120), m_available(true)
 {
-    // Default 30 second timeout
+    // Default 120 second timeout
 }
 
 OllamaHttpClient::~OllamaHttpClient()
@@ -22,7 +23,7 @@ std::string OllamaHttpClient::Post(const std::string& url, const std::string& js
     try 
     {
         // Parse URL to extract host and path
-        std::regex urlRegex(R"(^https?://([^:/]+)(?::(\d+))?(/.*)?$)");
+        std::regex urlRegex(R"(^(https?)://([^:/]+)(?::(\d+))?(/.*)?$)");
         std::smatch match;
         
         if (!std::regex_match(url, match, urlRegex))
@@ -31,18 +32,29 @@ std::string OllamaHttpClient::Post(const std::string& url, const std::string& js
             return "";
         }
         
-        std::string host = match[1].str();
-        int port = 80;
-        if (match[2].matched)
+        std::string protocol = match[1].str();
+        std::string host = match[2].str();
+        int port = 11434;  // Default Ollama port
+        if (match[3].matched)
         {
-            port = std::stoi(match[2].str());
+            port = std::stoi(match[3].str());
         }
-        else if (url.substr(0, 5) == "https")
+        else if (protocol == "https")
         {
-            port = 443;
+            port = 443;  // HTTPS default
+        }
+        else if (protocol == "http")
+        {
+            port = 11434;  // Ollama default port for HTTP
         }
         
-        std::string path = match[3].matched ? match[3].str() : "/";
+        std::string path = match[4].matched ? match[4].str() : "/";
+        
+        if(g_DebugEnabled)
+        {
+            LOG_INFO("server.loading", "[Ollama Chat] HTTP Request - Protocol: {}, Host: {}, Port: {}, Path: {}", 
+                protocol, host, port, path);
+        }
         
         // Create HTTP client
         httplib::Client client(host, port);
@@ -60,21 +72,31 @@ std::string OllamaHttpClient::Post(const std::string& url, const std::string& js
         
         if (!response)
         {
-            LOG_INFO("server.loading", "[Ollama Chat] HTTP request failed - no response");
+            LOG_ERROR("server.loading", "[Ollama Chat] HTTP request failed - no response from {}:{}{}", host, port, path);
             return "";
         }
         
         if (response->status != 200)
         {
-            LOG_INFO("server.loading", "[Ollama Chat] HTTP request failed with status: {}", response->status);
+            LOG_ERROR("server.loading", "[Ollama Chat] HTTP request failed with status: {} for {}:{}{}", 
+                response->status, host, port, path);
+            if(g_DebugEnabled)
+            {
+                LOG_INFO("server.loading", "[Ollama Chat] Response body: {}", response->body);
+            }
             return "";
+        }
+        
+        if(g_DebugEnabled)
+        {
+            LOG_INFO("server.loading", "[Ollama Chat] HTTP request successful, response length: {}", response->body.length());
         }
         
         return response->body;
     }
     catch (const std::exception& e)
     {
-        LOG_INFO("server.loading", "[Ollama Chat] HTTP client exception: {}", e.what());
+        LOG_ERROR("server.loading", "[Ollama Chat] HTTP client exception: {}", e.what());
         return "";
     }
 }
