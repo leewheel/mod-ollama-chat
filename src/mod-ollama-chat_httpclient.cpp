@@ -61,9 +61,10 @@ std::string OllamaHttpClient::Post(const std::string& url, const std::string& js
         std::unique_ptr<httplib::Client> client;
         if (protocol == "https") {
 #ifdef CPPHTTPLIB_OPENSSL_SUPPORT
-            client = std::make_unique<httplib::SSLClient>(host, port);
+            auto sslClient = std::make_unique<httplib::SSLClient>(host, port);
             // Disable SSL verification for ngrok and self-signed certificates
-            static_cast<httplib::SSLClient*>(client.get())->enable_server_certificate_verification(false);
+            sslClient->enable_server_certificate_verification(false);
+            client = std::move(sslClient);
             if(g_DebugEnabled) {
                 LOG_INFO("server.loading", "[Ollama Chat] Using SSL client for HTTPS connection");
             }
