@@ -68,7 +68,9 @@ std::string OllamaHttpClient::Post(const std::string& url, const std::string& js
                 LOG_INFO("server.loading", "[Ollama Chat] Using SSL client for HTTPS connection");
             }
 #else
-            LOG_ERROR("server.loading", "[Ollama Chat] HTTPS requested but SSL support not available. Compile with OpenSSL support.");
+            LOG_ERROR("server.loading", "[Ollama Chat] HTTPS requested but SSL support not available.");
+            LOG_ERROR("server.loading", "[Ollama Chat] Please rebuild with OpenSSL support enabled.");
+            LOG_ERROR("server.loading", "[Ollama Chat] See CMake output for OpenSSL installation instructions.");
             return "";
 #endif
         } else {
