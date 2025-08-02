@@ -149,7 +149,7 @@ OllamaChat.MaxBotsToPick = 2
 #     Description: A comma-separated list of command prefixes that should be ignored by AI bots.
 #                  If a message starts with any of these prefixes, the bot will not respond.
 #     Default:     
-OllamaChat.BlacklistCommands = autogear,talents,reset botAI,summon,release,revive,leave,attack,follow,flee,stay,runaway,grind,disperse,give leader,spells,cast,quests,accept,drop,talk,reset,ss ,trainer,rti ,rtsc,do,ll,e,ue,nc,open,destroy,s,b,bank,gb,u,co,ELVUI_VERSIONCHK,Asked ,DPSMate_,LibGroupTalents,BLT,oRA3,Skada,HealBot,hbComms,questie,pfQuest,DBMv4-Ver,BWVQ3
+OllamaChat.BlacklistCommands = autogear,talents,reset botAI,summon,release,revive,leave,attack,follow,flee,stay,runaway,grind,disperse,give leader,spells,cast ,quests,accept,drop,talk,reset,ss ,trainer,rti,rtsc,do ,ll ,e ,ue ,nc ,open,destroy,s ,b ,bank,gb ,u ,co ,ELVUI_VERSIONCHK,Asked,DPSMate_,LibGroupTalents,BLT,oRA3,Skada,HealBot,hbComms,questie,pfQuest,DBMv4-Ver,BWVQ3,add,remove,reset ai,report,state,help,log,stats,tank,offtank,healer,cc ,damage,boost,passive,defensive,aggressive,stay,guard,free,follow,assist,pet,stance,formation,rpg,emote,cheer,applaud,drink,eat,dance,attackers,reset instances,home,zone,who ,pos ,tele,grind,loot,quest,trainer,travel,teleport,homebind,unfollow,invite,uninvite,join,leave,leader,ready,release,save,update,reset talents,gear,trade,mail,ah ,ahscan,ahbid,ahbuy,ahsell,ahcancel,bag,repair,vendor,train,spells,reset spells,learn,unlearn,cast,uncast,use ,move,go ,look,stop,turn,face,wait,party,followleader,stayleader,moveleader,info,distance,debug,reset path,reset state,reset all,reset dungeon,reset raid,zone info
 
 # OllamaChat.SayDistance
 #     Description: The maximum distance (in game units) a bot must be within to reply on a Say message.
@@ -355,7 +355,7 @@ OllamaChat.SentimentPromptTemplate = "Your relationship sentiment with {player_n
 # OllamaChat.ChatPromptTemplate
 #   Description: The main template for bot chat prompts sent to the LLM.
 #   Placeholders (named): {bot_name} {bot_level} {bot_class} {bot_personality} {player_level} {player_class} {player_name} {player_message} {extra_info} {sentiment_info}
-OllamaChat.ChatPromptTemplate = "You're a Wrath-era WoW player familiar with Vanilla and TBC. Name: {bot_name}, Level: {bot_level} {bot_class}, MAKE SURE YOU RESPOND USING YOUR PERSONALITY, WHICH IS: {bot_personality}. {sentiment_info} A level {player_level} {player_class} named {player_name} said: '{player_message}'. {extra_info} Reply naturally in under 15 words. Use authentic WoW tone. Respect higher levels, mock lower ones. Be blunt if provoked. Be precise if giving directions. Never contradict your class, race, or location. Never act like a narrator—just respond like a player."
+OllamaChat.ChatPromptTemplate = "You're a Wrath-era WoW player familiar with Vanilla and TBC. Name: {bot_name}, Level: {bot_level} {bot_class}, MAKE SURE YOU RESPOND USING YOUR PERSONALITY, WHICH IS: {bot_personality}. {sentiment_info} A level {player_level} {player_class} named {player_name} said: '{player_message}'. {extra_info} Reply naturally in under 15 words. Use authentic WoW tone. Be blunt if provoked. Be precise if giving directions. Never contradict your class, race, or location. Never act like a narrator—just respond like a player."
 
 # OllamaChat.ChatExtraInfoTemplate
 #   Description: The context/details string about the bot and player, injected into the chat prompt as the last parameter.
