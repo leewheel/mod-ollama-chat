@@ -126,10 +126,6 @@ void PlayerBotChatHandler::OnPlayerChat(Player* player, uint32_t type, uint32_t 
     if (!g_Enable)
         return;
 
-    // Skip whispers here since they're handled by OnPlayerChat with receiver parameter
-    if (type == CHAT_MSG_WHISPER)
-        return;
-
     ChatChannelSourceLocal sourceLocal = GetChannelSourceLocal(type);
     ProcessChat(player, type, lang, msg, sourceLocal, nullptr, nullptr);
 }
@@ -714,47 +710,67 @@ void PlayerBotChatHandler::ProcessChat(Player* player, uint32_t /*type*/, uint32
     }
     
         std::vector<Player*> finalCandidates;
-    std::vector<std::pair<size_t, Player*>> mentionedBots;
-
-    for (Player* bot : candidateBots)
+    
+    // For whispers, handle directly - there should only be one receiver bot
+    if (sourceLocal == SRC_WHISPER_LOCAL)
     {
-        if (!bot)
+        if (!candidateBots.empty())
         {
-            continue;
-        }
-        if (g_DisableRepliesInCombat && bot->IsInCombat())
-        {
-            continue;
-        }
-        size_t pos = trimmedMsg.find(bot->GetName());
-        if (pos != std::string::npos)
-        {
-            mentionedBots.emplace_back(pos, bot);
-        }
-    }
-
-    if (!mentionedBots.empty())
-    {
-        std::sort(mentionedBots.begin(), mentionedBots.end(),
-                  [](auto &a, auto &b) { return a.first < b.first; });
-        Player* chosen = mentionedBots.front().second;
-        if (!(g_DisableRepliesInCombat && chosen->IsInCombat()))
-        {
-            finalCandidates.push_back(chosen);
+            Player* whisperBot = candidateBots[0]; // Should only be one bot for whispers
+            if (!(g_DisableRepliesInCombat && whisperBot->IsInCombat()))
+            {
+                finalCandidates.push_back(whisperBot);
+                if(g_DebugEnabled)
+                {
+                    LOG_INFO("server.loading", "[Ollama Chat] Whisper: Bot {} selected to respond", whisperBot->GetName());
+                }
+            }
         }
     }
     else
     {
+        // Handle non-whisper chats with normal multi-bot logic
+        std::vector<std::pair<size_t, Player*>> mentionedBots;
+
         for (Player* bot : candidateBots)
         {
+            if (!bot)
+            {
+                continue;
+            }
             if (g_DisableRepliesInCombat && bot->IsInCombat())
             {
                 continue;
             }
-            // For whispers, always respond (don't use probability)
-            if (sourceLocal == SRC_WHISPER_LOCAL || urand(0, 99) < chance)
+            size_t pos = trimmedMsg.find(bot->GetName());
+            if (pos != std::string::npos)
             {
-                finalCandidates.push_back(bot);
+                mentionedBots.emplace_back(pos, bot);
+            }
+        }
+
+        if (!mentionedBots.empty())
+        {
+            std::sort(mentionedBots.begin(), mentionedBots.end(),
+                      [](auto &a, auto &b) { return a.first < b.first; });
+            Player* chosen = mentionedBots.front().second;
+            if (!(g_DisableRepliesInCombat && chosen->IsInCombat()))
+            {
+                finalCandidates.push_back(chosen);
+            }
+        }
+        else
+        {
+            for (Player* bot : candidateBots)
+            {
+                if (g_DisableRepliesInCombat && bot->IsInCombat())
+                {
+                    continue;
+                }
+                if (urand(0, 99) < chance)
+                {
+                    finalCandidates.push_back(bot);
+                }
             }
         }
     }
