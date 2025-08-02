@@ -127,7 +127,7 @@ void PlayerBotChatHandler::OnPlayerChat(Player* player, uint32_t type, uint32_t 
         return;
 
     ChatChannelSourceLocal sourceLocal = GetChannelSourceLocal(type);
-    //ProcessChat(player, type, lang, msg, sourceLocal, nullptr, nullptr);
+    ProcessChat(player, type, lang, msg, sourceLocal, nullptr, nullptr);
 }
 
 void PlayerBotChatHandler::OnPlayerChat(Player* player, uint32_t type, uint32_t lang, std::string& msg, Group* /*group*/)
@@ -168,7 +168,7 @@ void PlayerBotChatHandler::OnPlayerChat(Player* player, uint32_t type, uint32_t 
                 player->GetName(), type, receiver ? receiver->GetName() : "null");
     }
 
-    if (type == CHAT_MSG_WHISPER && receiver)
+    if (type == CHAT_MSG_WHISPER && receiver && player && player!= receiver)
     {
         
         PlayerbotAI* receiverAI = sPlayerbotsMgr->GetPlayerbotAI(receiver);
@@ -181,8 +181,8 @@ void PlayerBotChatHandler::OnPlayerChat(Player* player, uint32_t type, uint32_t 
         return;
     }
 
-    ChatChannelSourceLocal sourceLocal = GetChannelSourceLocal(type);
-    ProcessChat(player, type, lang, msg, sourceLocal, nullptr, receiver);
+    // ChatChannelSourceLocal sourceLocal = GetChannelSourceLocal(type);
+    // ProcessChat(player, type, lang, msg, sourceLocal, nullptr, receiver);
 }
 
 void AppendBotConversation(uint64_t botGuid, uint64_t playerGuid, const std::string& playerMessage, const std::string& botReply)
