@@ -153,6 +153,35 @@ std::vector<std::string> g_EnvCommentDungeon;
 std::vector<std::string> g_EnvCommentUnfinishedQuest;
 
 // --------------------------------------------
+// Guild-Specific Random Chatter Templates
+// --------------------------------------------
+std::vector<std::string> g_GuildEnvCommentGuildMember;
+std::vector<std::string> g_GuildEnvCommentGuildRank;
+std::vector<std::string> g_GuildEnvCommentGuildBank;
+std::vector<std::string> g_GuildEnvCommentGuildMOTD;
+std::vector<std::string> g_GuildEnvCommentGuildInfo;
+std::vector<std::string> g_GuildEnvCommentGuildOnlineMembers;
+
+// --------------------------------------------
+// Guild-Specific Random Chatter Configuration
+// --------------------------------------------
+bool        g_EnableGuildRandomChatter             = true;
+uint32_t    g_GuildChatterBotCommentChance          = 25;
+uint32_t    g_GuildChatterMaxBotsPerEvent           = 2;
+
+// --------------------------------------------
+// Guild-Specific Event Chatter Templates
+// --------------------------------------------
+std::string g_GuildEventTypeLevelUp = "";
+std::string g_GuildEventTypeDungeonComplete = "";
+std::string g_GuildEventTypeEpicGear = "";
+std::string g_GuildEventTypeRareGear = "";
+std::string g_GuildEventTypeGuildJoin = "";
+std::string g_GuildEventTypeGuildLeave = "";
+std::string g_GuildEventTypeGuildPromotion = "";
+std::string g_GuildEventTypeGuildDemotion = "";
+
+// --------------------------------------------
 // Event Chatter Templates
 // --------------------------------------------
 std::string g_EventTypeDefeated;           // "defeated"
@@ -397,6 +426,29 @@ void LoadOllamaChatConfig()
     g_EnvCommentBagSlots        = LoadEnvCommentVector("OllamaChat.EnvCommentBagSlots", { "" });
     g_EnvCommentDungeon         = LoadEnvCommentVector("OllamaChat.EnvCommentDungeon", { "" });
     g_EnvCommentUnfinishedQuest = LoadEnvCommentVector("OllamaChat.EnvCommentUnfinishedQuest", { "" });
+
+    // Guild-specific random chatter templates
+    g_GuildEnvCommentGuildMember = LoadEnvCommentVector("OllamaChat.GuildEnvCommentGuildMember", { "" });
+    g_GuildEnvCommentGuildRank = LoadEnvCommentVector("OllamaChat.GuildEnvCommentGuildRank", { "" });
+    g_GuildEnvCommentGuildBank = LoadEnvCommentVector("OllamaChat.GuildEnvCommentGuildBank", { "" });
+    g_GuildEnvCommentGuildMOTD = LoadEnvCommentVector("OllamaChat.GuildEnvCommentGuildMOTD", { "" });
+    g_GuildEnvCommentGuildInfo = LoadEnvCommentVector("OllamaChat.GuildEnvCommentGuildInfo", { "" });
+    g_GuildEnvCommentGuildOnlineMembers = LoadEnvCommentVector("OllamaChat.GuildEnvCommentGuildOnlineMembers", { "" });
+
+    // Guild-specific configuration
+    g_EnableGuildRandomChatter = sConfigMgr->GetOption<bool>("OllamaChat.EnableGuildRandomChatter", true);
+    g_GuildChatterBotCommentChance = sConfigMgr->GetOption<uint32_t>("OllamaChat.GuildChatterBotCommentChance", 25);
+    g_GuildChatterMaxBotsPerEvent = sConfigMgr->GetOption<uint32_t>("OllamaChat.GuildChatterMaxBotsPerEvent", 2);
+
+    // Guild-specific event templates
+    g_GuildEventTypeLevelUp = sConfigMgr->GetOption<std::string>("OllamaChat.GuildEventTypeLevelUp", "");
+    g_GuildEventTypeDungeonComplete = sConfigMgr->GetOption<std::string>("OllamaChat.GuildEventTypeDungeonComplete", "");
+    g_GuildEventTypeEpicGear = sConfigMgr->GetOption<std::string>("OllamaChat.GuildEventTypeEpicGear", "");
+    g_GuildEventTypeRareGear = sConfigMgr->GetOption<std::string>("OllamaChat.GuildEventTypeRareGear", "");
+    g_GuildEventTypeGuildJoin = sConfigMgr->GetOption<std::string>("OllamaChat.GuildEventTypeGuildJoin", "");
+    g_GuildEventTypeGuildLeave = sConfigMgr->GetOption<std::string>("OllamaChat.GuildEventTypeGuildLeave", "");
+    g_GuildEventTypeGuildPromotion = sConfigMgr->GetOption<std::string>("OllamaChat.GuildEventTypeGuildPromotion", "");
+    g_GuildEventTypeGuildDemotion = sConfigMgr->GetOption<std::string>("OllamaChat.GuildEventTypeGuildDemotion", "");
 
     LOG_INFO("server.loading",
              "[Ollama Chat] Config loaded: Enabled = {}, SayDistance = {}, YellDistance = {}, "

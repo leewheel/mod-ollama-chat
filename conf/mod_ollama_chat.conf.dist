@@ -507,3 +507,142 @@ OllamaChat.EventTypeAchievement = earned achievement
 #     Used in: Event-based chat when using objects in the world.
 #     Default: used object
 OllamaChat.EventTypeUsedObject = used object
+
+# --------------------------------------------
+# GUILD-SPECIFIC RANDOM CHATTER
+# --------------------------------------------
+
+# OllamaChat.EnableGuildRandomChatter
+#     Description: Enable guild-specific random chatter for bots in guilds with real players.
+#                  When enabled, bots will make guild-related comments and use guild chat.
+#                  Only activates when real players are online in the same guild as the bot.
+#     Default: 1 (true)
+OllamaChat.EnableGuildRandomChatter = 1
+
+# OllamaChat.GuildChatterBotCommentChance
+#     Description: Percentage chance (0-100) for guild bots to comment on guild events.
+#                  This applies to events like level ups, gear acquisition, dungeon completion.
+#                  Lower values = less frequent guild event responses.
+#     Default: 25
+OllamaChat.GuildChatterBotCommentChance = 25
+
+# OllamaChat.GuildChatterMaxBotsPerEvent
+#     Description: Maximum number of guild bots that can respond to a single guild event.
+#                  Prevents spam when multiple guild bots want to comment on the same event.
+#                  Example: If set to 2, only 2 bots max will respond to a member leveling up.
+#     Default: 2
+OllamaChat.GuildChatterMaxBotsPerEvent = 2
+
+# --------------------------------------------
+# GUILD ENVIRONMENT COMMENT TEMPLATES
+# --------------------------------------------
+
+# OllamaChat.GuildEnvCommentGuildMember
+#     Description: Templates for commenting on guild members. Pipe-separated (|) list.
+#     Placeholders: {member_name}
+#     Example: "I wonder what {member_name} is up to today."
+#     Default: (empty - no guild member comments)
+OllamaChat.GuildEnvCommentGuildMember = I wonder what {member_name} is up to today.|{member_name} is a solid guild member.|Haven't seen {member_name} around much lately.
+
+# OllamaChat.GuildEnvCommentGuildRank
+#     Description: Templates for commenting on guild ranks. Pipe-separated (|) list.
+#     Placeholders: {guild_rank}
+#     Example: "Being a {guild_rank} has its perks."
+#     Default: (empty - no guild rank comments)
+OllamaChat.GuildEnvCommentGuildRank = Being a {guild_rank} has its perks.|The {guild_rank} rank comes with responsibilities.|I'm proud to be a {guild_rank} in this guild.
+
+# OllamaChat.GuildEnvCommentGuildBank
+#     Description: Templates for commenting on guild bank status. Pipe-separated (|) list.
+#     Placeholders: {bank_gold}
+#     Example: "Guild bank has {bank_gold} gold saved up."
+#     Default: (empty - no guild bank comments)
+OllamaChat.GuildEnvCommentGuildBank = Guild bank has {bank_gold} gold saved up.|We should check what's in the guild bank.|{bank_gold} gold in the guild bank, not bad.|The guild bank could use some donations.
+
+# OllamaChat.GuildEnvCommentGuildMOTD
+#     Description: Templates for commenting on guild message of the day. Pipe-separated (|) list.
+#     Placeholders: {guild_motd}
+#     Example: "Guild MOTD says: {guild_motd}"
+#     Default: (empty - no guild MOTD comments)
+OllamaChat.GuildEnvCommentGuildMOTD = Guild MOTD says: {guild_motd}|Did everyone see the guild message? {guild_motd}|The officers updated the MOTD: {guild_motd}
+
+# OllamaChat.GuildEnvCommentGuildInfo
+#     Description: Templates for commenting on guild information. Pipe-separated (|) list.
+#     Placeholders: {guild_info}
+#     Example: "Our guild info reads: {guild_info}"
+#     Default: (empty - no guild info comments)
+OllamaChat.GuildEnvCommentGuildInfo = Our guild info reads: {guild_info}|Check out the guild info if you haven't: {guild_info}|The guild description says it all: {guild_info}
+
+# OllamaChat.GuildEnvCommentGuildOnlineMembers
+#     Description: Templates for commenting on online guild members. Pipe-separated (|) list.
+#     Placeholders: {online_count}, {total_count}
+#     Example: "We have {online_count} out of {total_count} guild members online."
+#     Default: (empty - no online member comments)
+OllamaChat.GuildEnvCommentGuildOnlineMembers = We have {online_count} out of {total_count} guild members online.|{online_count} guildies are online right now.|Nice to see {online_count} guild members active today.|Only {online_count} of us online from the guild.
+
+# --------------------------------------------
+# GUILD EVENT TYPES
+# --------------------------------------------
+
+# OllamaChat.GuildEventTypeLevelUp
+#     Description: Event type for guild level up announcements.
+#                  Triggered when a guild member levels up.
+#                  Bots will use this event type to respond in guild chat.
+#     Example:     "Congratulations on hitting level 80!"
+#     Default:     guild member leveled up
+OllamaChat.GuildEventTypeLevelUp = guild member leveled up
+
+# OllamaChat.GuildEventTypeDungeonComplete
+#     Description: Event type for guild dungeon completion announcements.
+#                  Triggered when a guild member completes a quest while in a dungeon.
+#                  Helps celebrate dungeon achievements in guild chat.
+#     Example:     "Nice work clearing that dungeon!"
+#     Default:     guild member completed dungeon
+OllamaChat.GuildEventTypeDungeonComplete = guild member completed dungeon
+
+# OllamaChat.GuildEventTypeEpicGear
+#     Description: Event type for guild epic gear acquisition announcements.
+#                  Triggered when a guild member obtains epic (purple) quality gear.
+#                  Creates excitement and congratulations for rare loot.
+#     Example:     "Grats on the epic loot!"
+#     Default:     guild member got epic gear
+OllamaChat.GuildEventTypeEpicGear = guild member got epic gear
+
+# OllamaChat.GuildEventTypeRareGear
+#     Description: Event type for guild rare gear acquisition announcements.
+#                  Triggered when a guild member obtains rare (blue) quality weapons or armor.
+#                  Only announces equipment, not consumables or trade goods.
+#     Example:     "Nice blue gear upgrade!"
+#     Default:     guild member got rare gear
+OllamaChat.GuildEventTypeRareGear = guild member got rare gear
+
+# OllamaChat.GuildEventTypeGuildJoin
+#     Description: Event type for guild member join announcements.
+#                  Triggered when a new player joins the guild.
+#                  Welcomes new members to the guild community.
+#     Example:     "Welcome to the guild!"
+#     Default:     member joined guild
+OllamaChat.GuildEventTypeGuildJoin = member joined guild
+
+# OllamaChat.GuildEventTypeGuildLeave
+#     Description: Event type for guild member leave announcements.
+#                  Triggered when a player leaves the guild.
+#                  Acknowledges departing members.
+#     Example:     "Sad to see them go."
+#     Default:     member left guild
+OllamaChat.GuildEventTypeGuildLeave = member left guild
+
+# OllamaChat.GuildEventTypeGuildPromotion
+#     Description: Event type for guild member promotion announcements.
+#                  Triggered when a guild member gets promoted to a higher rank.
+#                  Celebrates advancement within the guild hierarchy.
+#     Example:     "Congrats on the promotion!"
+#     Default:     member got promoted
+OllamaChat.GuildEventTypeGuildPromotion = member got promoted
+
+# OllamaChat.GuildEventTypeGuildDemotion
+#     Description: Event type for guild member demotion announcements.
+#                  Triggered when a guild member gets demoted to a lower rank.
+#                  Handles rank changes sensitively.
+#     Example:     "Rank changes happen."
+#     Default:     member got demoted
+OllamaChat.GuildEventTypeGuildDemotion = member got demoted

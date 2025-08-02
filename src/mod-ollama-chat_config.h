@@ -137,6 +137,35 @@ extern std::vector<std::string> g_EnvCommentDungeon;
 extern std::vector<std::string> g_EnvCommentUnfinishedQuest;
 
 // --------------------------------------------
+// Guild-Specific Random Chatter Templates
+// --------------------------------------------
+extern std::vector<std::string> g_GuildEnvCommentGuildMember;
+extern std::vector<std::string> g_GuildEnvCommentGuildRank;
+extern std::vector<std::string> g_GuildEnvCommentGuildBank;
+extern std::vector<std::string> g_GuildEnvCommentGuildMOTD;
+extern std::vector<std::string> g_GuildEnvCommentGuildInfo;
+extern std::vector<std::string> g_GuildEnvCommentGuildOnlineMembers;
+
+// --------------------------------------------
+// Guild-Specific Random Chatter Configuration
+// --------------------------------------------
+extern bool        g_EnableGuildRandomChatter;
+extern uint32_t    g_GuildChatterBotCommentChance;
+extern uint32_t    g_GuildChatterMaxBotsPerEvent;
+
+// --------------------------------------------
+// Guild-Specific Event Chatter Templates
+// --------------------------------------------
+extern std::string g_GuildEventTypeLevelUp;
+extern std::string g_GuildEventTypeDungeonComplete;
+extern std::string g_GuildEventTypeEpicGear;
+extern std::string g_GuildEventTypeRareGear;
+extern std::string g_GuildEventTypeGuildJoin;
+extern std::string g_GuildEventTypeGuildLeave;
+extern std::string g_GuildEventTypeGuildPromotion;
+extern std::string g_GuildEventTypeGuildDemotion;
+
+// --------------------------------------------
 // Bot-Player Sentiment Tracking System
 // --------------------------------------------
 extern bool        g_EnableSentimentTracking;
