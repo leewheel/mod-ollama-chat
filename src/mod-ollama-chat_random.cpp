@@ -460,7 +460,7 @@ void OllamaBotRandomChatter::HandleRandomChatter()
                     if (!g_GuildEnvCommentGuildMember.empty())
                     {
                         // Use the bot's own name as a guild member reference
-                        std::string memberName = sPlayer->GetName();
+                        std::string memberName = bot->GetName();
                         if (!memberName.empty())
                         {
                             uint32_t idx = urand(0, g_GuildEnvCommentGuildMember.size() - 1);
