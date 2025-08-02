@@ -7,6 +7,7 @@
 #include "Log.h"
 #include <sstream>
 #include <regex>
+#include <memory>
 
 OllamaHttpClient::OllamaHttpClient()
     : m_timeout(120), m_available(true)
@@ -56,19 +57,48 @@ std::string OllamaHttpClient::Post(const std::string& url, const std::string& js
                 protocol, host, port, path);
         }
         
-        // Create HTTP client
-        httplib::Client client(host, port);
-        client.set_connection_timeout(m_timeout);
-        client.set_read_timeout(m_timeout);
-        client.set_write_timeout(m_timeout);
+        // Create HTTP client (with SSL support for HTTPS)
+        std::unique_ptr<httplib::Client> client;
+        if (protocol == "https") {
+#ifdef CPPHTTPLIB_OPENSSL_SUPPORT
+            client = std::make_unique<httplib::SSLClient>(host, port);
+            // Disable SSL verification for ngrok and self-signed certificates
+            static_cast<httplib::SSLClient*>(client.get())->enable_server_certificate_verification(false);
+            if(g_DebugEnabled) {
+                LOG_INFO("server.loading", "[Ollama Chat] Using SSL client for HTTPS connection");
+            }
+#else
+            LOG_ERROR("server.loading", "[Ollama Chat] HTTPS requested but SSL support not available. Compile with OpenSSL support.");
+            return "";
+#endif
+        } else {
+            client = std::make_unique<httplib::Client>(host, port);
+            if(g_DebugEnabled) {
+                LOG_INFO("server.loading", "[Ollama Chat] Using standard HTTP client");
+            }
+        }
         
-        // Set headers
+        client->set_connection_timeout(m_timeout);
+        client->set_read_timeout(m_timeout);
+        client->set_write_timeout(m_timeout);
+        
+        // Set headers (with ngrok-specific headers)
         httplib::Headers headers = {
-            {"Content-Type", "application/json"}
+            {"Content-Type", "application/json"},
+            {"User-Agent", "AzerothCore-OllamaChat/1.0"},
+            {"Accept", "application/json"}
         };
         
+        // Add ngrok bypass header if this is an ngrok URL
+        if (host.find("ngrok") != std::string::npos || host.find("ngrok-free.app") != std::string::npos) {
+            headers.emplace("ngrok-skip-browser-warning", "true");
+            if(g_DebugEnabled) {
+                LOG_INFO("server.loading", "[Ollama Chat] Added ngrok bypass header");
+            }
+        }
+        
         // Make POST request
-        auto response = client.Post(path, headers, jsonData, "application/json");
+        auto response = client->Post(path, headers, jsonData, "application/json");
         
         if (!response)
         {
