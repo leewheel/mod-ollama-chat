@@ -727,9 +727,7 @@ void PlayerBotChatHandler::ProcessChat(Player* player, uint32_t /*type*/, uint32
             eligibleBots.push_back(candidate);
             if(g_DebugEnabled)
             {
-                LOG_INFO("server.loading", "[Ollama Chat] VERIFIED eligible bot {} in channel '{}' - Distance: {:.2f}, Zone match: {}", 
-                        candidate->GetName(), channel->GetName(), 
-                        candidate->GetDistance(player), (candidate->GetZoneId() == player->GetZoneId()));
+                // LOG_INFO("server.loading", "[Ollama Chat] VERIFIED eligible bot {} in channel '{}' - Distance: {:.2f}, Zone match: {}", candidate->GetName(), channel->GetName(), candidate->GetDistance(player), (candidate->GetZoneId() == player->GetZoneId()));
             }
         }
         
