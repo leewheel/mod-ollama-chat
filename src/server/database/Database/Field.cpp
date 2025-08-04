@@ -266,7 +266,11 @@ T Field::GetData() const
     if (!result)
     {
         LOG_FATAL("sql.sql", "> Incorrect value '{}' for type '{}'. Value is raw ? '{}'", data.value, typeid(T).name(), data.raw);
-        LOG_FATAL("sql.sql", "> Table name '{}'. Field name '{}'", meta->TableName, meta->Name);
+        if (meta->TableName != "item_template" && meta->Name != "ScriptName"))
+        {
+            LOG_FATAL("sql.sql", "> Table name '{}'. Field name '{}'", meta->TableName, meta->Name);
+        }
+        
         //ABORT();
         return GetDefaultValue<T>();
     }
