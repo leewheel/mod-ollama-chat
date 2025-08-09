@@ -73,8 +73,7 @@ Map::~Map()
 
 Map::Map(uint32 id, uint32 InstanceId, uint8 SpawnMode, Map* _parent) :
     _mapGridManager(this), i_mapEntry(sMapStore.LookupEntry(id)), i_spawnMode(SpawnMode), i_InstanceId(InstanceId),
-    m_unloadTimer(0), m_VisibleDistance(DEFAULT_VISIBILITY_DISTANCE),
-    _instanceResetPeriod(0), m_activeNonPlayersIter(m_activeNonPlayers.end()),
+    m_unloadTimer(0), m_VisibleDistance(DEFAULT_VISIBILITY_DISTANCE), _instanceResetPeriod(0),
     _transportsUpdateIter(_transports.end()), i_scriptLock(false), _defaultLight(GetDefaultMapLight(id))
 {
     m_parentMap = (_parent ? _parent : this);
@@ -289,7 +288,6 @@ bool Map::AddPlayerToMap(Player* player)
     SendInitSelf(player);
     SendZoneDynamicInfo(player);
 
-    player->m_clientGUIDs.clear();
     player->UpdateObjectVisibility(false);
 
     if (player->IsAlive())
@@ -358,9 +356,6 @@ bool Map::AddToMap(T* obj, bool checkTransport)
 
     InitializeObject(obj);
 
-    if (obj->isActiveObject())
-        AddToActive(obj);
-
     //something, such as vehicle, needs to be update immediately
     //also, trigger needs to cast spell, if not update, cannot see visual
     obj->UpdateObjectVisibility(true);
@@ -393,9 +388,6 @@ bool Map::AddToMap(MotionTransport* obj, bool /*checkTransport*/)
         EnsureGridLoaded(cell);
 
     obj->AddToWorld();
-
-    if (obj->isActiveObject())
-        AddToActive(obj);
 
     _transports.insert(obj);
 
@@ -509,19 +501,6 @@ void Map::Update(const uint32 t_diff, const uint32 s_diff, bool  /*thread*/)
                 else if (DynamicObject* viewObject = viewPoint->ToDynObject())
                     MarkNearbyCellsOf(viewObject);
             }
-        }
-    }
-
-    if (_updatableObjectListRecheckTimer.Passed())
-    {
-        // Mark all cells near active objects
-        for (m_activeNonPlayersIter = m_activeNonPlayers.begin(); m_activeNonPlayersIter != m_activeNonPlayers.end(); ++m_activeNonPlayersIter)
-        {
-            WorldObject* obj = *m_activeNonPlayersIter;
-            if (!obj || !obj->IsInWorld())
-                continue;
-
-            MarkNearbyCellsOf(obj);
         }
     }
 
@@ -676,12 +655,8 @@ void Map::RemovePlayerFromMap(Player* player, bool remove)
     player->UpdateZone(MAP_INVALID_ZONE, 0);
     player->getHostileRefMgr().deleteReferences(true); // pussywizard: multithreading crashfix
 
-    bool inWorld = player->IsInWorld();
     player->RemoveFromWorld();
     SendRemoveTransports(player);
-
-    if (!inWorld) // pussywizard: if was in world, RemoveFromWorld() called DestroyForNearbyPlayers()
-        player->DestroyForNearbyPlayers(); // pussywizard: previous player->UpdateObjectVisibility(true)
 
     if (player->IsInGrid())
         player->RemoveFromGrid();
@@ -702,14 +677,7 @@ void Map::AfterPlayerUnlinkFromMap()
 template<class T>
 void Map::RemoveFromMap(T* obj, bool remove)
 {
-    bool inWorld = obj->IsInWorld() && obj->GetTypeId() >= TYPEID_UNIT && obj->GetTypeId() <= TYPEID_GAMEOBJECT;
     obj->RemoveFromWorld();
-
-    if (obj->isActiveObject())
-        RemoveFromActive(obj);
-
-    if (!inWorld) // pussywizard: if was in world, RemoveFromWorld() called DestroyForNearbyPlayers()
-        obj->DestroyForNearbyPlayers(); // pussywizard: previous player->UpdateObjectVisibility()
 
     obj->RemoveFromGrid();
 
@@ -726,8 +694,6 @@ template<>
 void Map::RemoveFromMap(MotionTransport* obj, bool remove)
 {
     obj->RemoveFromWorld();
-    if (obj->isActiveObject())
-        RemoveFromActive(obj);
 
     Map::PlayerList const& players = GetPlayers();
     if (!players.IsEmpty())
@@ -1653,6 +1619,9 @@ void Map::SendInitTransports(Player* player)
         if (*itr != player->GetTransport())
             (*itr)->BuildCreateUpdateBlockForPlayer(&transData, player);
 
+    if (!transData.HasData())
+        return;
+
     WorldPacket packet;
     transData.BuildPacket(packet);
     player->GetSession()->SendPacket(&packet);
@@ -1667,7 +1636,7 @@ void Map::SendRemoveTransports(Player* player)
             (*itr)->BuildOutOfRangeUpdateBlock(&transData);
 
     // pussywizard: remove static transports from client
-    for (GuidUnorderedSet::const_iterator it = player->m_clientGUIDs.begin(); it != player->m_clientGUIDs.end(); )
+    /*for (GuidUnorderedSet::const_iterator it = player->m_clientGUIDs.begin(); it != player->m_clientGUIDs.end(); )
     {
         if ((*it).IsTransport())
         {
@@ -1676,7 +1645,10 @@ void Map::SendRemoveTransports(Player* player)
         }
         else
             ++it;
-    }
+    }*/
+
+    if (!transData.HasData())
+        return;
 
     WorldPacket packet;
     transData.BuildPacket(packet);
@@ -1686,7 +1658,6 @@ void Map::SendRemoveTransports(Player* player)
 void Map::SendObjectUpdates()
 {
     UpdateDataMapType update_players;
-    UpdatePlayerSet player_set;
 
     while (!_updateObjects.empty())
     {
@@ -1694,7 +1665,7 @@ void Map::SendObjectUpdates()
         ASSERT(obj->IsInWorld());
 
         _updateObjects.erase(_updateObjects.begin());
-        obj->BuildUpdate(update_players, player_set);
+        obj->BuildUpdate(update_players);
     }
 
     WorldPacket packet;                                     // here we allocate a std::vector with a size of 0x10000
@@ -1828,60 +1799,6 @@ void Map::SendToPlayers(WorldPacket const* data) const
 {
     for (MapRefMgr::const_iterator itr = m_mapRefMgr.begin(); itr != m_mapRefMgr.end(); ++itr)
         itr->GetSource()->GetSession()->SendPacket(data);
-}
-
-template<class T>
-void Map::AddToActive(T* obj)
-{
-    AddToActiveHelper(obj);
-}
-
-template <>
-void Map::AddToActive(Creature* c)
-{
-    AddToActiveHelper(c);
-}
-
-template<>
-void Map::AddToActive(DynamicObject* d)
-{
-    AddToActiveHelper(d);
-}
-
-template<>
-void Map::AddToActive(GameObject* d)
-{
-    AddToActiveHelper(d);
-}
-
-template<>
-void Map::AddToActive(Corpse* /*c*/)
-{
-    // do nothing for corpses
-}
-
-template<class T>
-void Map::RemoveFromActive(T* obj)
-{
-    RemoveFromActiveHelper(obj);
-}
-
-template <>
-void Map::RemoveFromActive(Creature* c)
-{
-    RemoveFromActiveHelper(c);
-}
-
-template<>
-void Map::RemoveFromActive(DynamicObject* obj)
-{
-    RemoveFromActiveHelper(obj);
-}
-
-template<>
-void Map::RemoveFromActive(GameObject* obj)
-{
-    RemoveFromActiveHelper(obj);
 }
 
 template bool Map::AddToMap(Corpse*, bool);
@@ -2692,7 +2609,7 @@ void Map::RemoveCorpse(Corpse* corpse)
     ASSERT(corpse);
     GridCoord const gridCoord = Acore::ComputeGridCoord(corpse->GetPositionX(), corpse->GetPositionY());
 
-    corpse->DestroyForNearbyPlayers();
+    corpse->DestroyForVisiblePlayers();
     if (corpse->IsInGrid())
         RemoveFromMap(corpse, false);
     else
