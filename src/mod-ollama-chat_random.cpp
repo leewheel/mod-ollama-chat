@@ -138,7 +138,7 @@ void OllamaBotRandomChatter::HandleRandomChatter()
                 Unit* unitInRange = nullptr;
                 Acore::AnyUnitInObjectRangeCheck creatureCheck(bot, g_SayDistance);
                 Acore::UnitSearcher<Acore::AnyUnitInObjectRangeCheck> creatureSearcher(bot, unitInRange, creatureCheck);
-                Cell::VisitGridObjects(bot, creatureSearcher, g_SayDistance);
+                Cell::VisitObjects(bot, creatureSearcher, g_SayDistance);
                 if (unitInRange && unitInRange->GetTypeId() == TYPEID_UNIT)
                     if (!g_EnvCommentCreature.empty()) {
                         uint32_t idx = g_EnvCommentCreature.size() == 1 ? 0 : urand(0, g_EnvCommentCreature.size() - 1);
