@@ -152,7 +152,7 @@ void OllamaBotRandomChatter::HandleRandomChatter()
                 Acore::GameObjectInRangeCheck goCheck(bot->GetPositionX(), bot->GetPositionY(), bot->GetPositionZ(), g_SayDistance);
                 GameObject* goInRange = nullptr;
                 Acore::GameObjectSearcher<Acore::GameObjectInRangeCheck> goSearcher(bot, goInRange, goCheck);
-                Cell::VisitGridObjects(bot, goSearcher, g_SayDistance);
+                Cell::VisitObjects(bot, goSearcher, g_SayDistance);
                 if (goInRange)
                 {
                     if (!g_EnvCommentGameObject.empty()) {
@@ -336,7 +336,7 @@ void OllamaBotRandomChatter::HandleRandomChatter()
                 Unit* unit = nullptr;
                 Acore::AnyUnitInObjectRangeCheck check(bot, g_SayDistance);
                 Acore::UnitSearcher<Acore::AnyUnitInObjectRangeCheck> searcher(bot, unit, check);
-                Cell::VisitGridObjects(bot, searcher, g_SayDistance);
+                Cell::VisitObjects(bot, searcher, g_SayDistance);
 
                 if (unit && unit->GetTypeId() == TYPEID_UNIT)
                 {
@@ -357,7 +357,7 @@ void OllamaBotRandomChatter::HandleRandomChatter()
                 Unit* unit = nullptr;
                 Acore::AnyUnitInObjectRangeCheck check(bot, g_SayDistance);
                 Acore::UnitSearcher<Acore::AnyUnitInObjectRangeCheck> searcher(bot, unit, check);
-                Cell::VisitGridObjects(bot, searcher, g_SayDistance);
+                Cell::VisitObjects(bot, searcher, g_SayDistance);
 
                 if (unit && unit->GetTypeId() == TYPEID_UNIT)
                 {
