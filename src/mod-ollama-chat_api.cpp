@@ -32,7 +32,7 @@ std::string QueryOllamaAPI(const std::string& prompt)
         {
             LOG_INFO("server.loading", "[Ollama Chat] HTTP client not available.");
         }
-        return "嗯....我脑子暂时有点懵。";
+        return "Hmm... I'm lost in thought.";
     }
 
     std::string url   = g_OllamaUrl;
@@ -40,14 +40,62 @@ std::string QueryOllamaAPI(const std::string& prompt)
 
     nlohmann::json requestData = {
         {"model",  model},
-        {"prompt", prompt}
+        {"prompt", prompt},
+        {"stream", false}
     };
+
+    // Create options object for model parameters
+    nlohmann::json options;
+    bool hasOptions = false;
+
     // Only include if set (do not send defaults if user did not set them)
-    if (g_OllamaNumPredict > 0)          requestData["num_predict"]     = g_OllamaNumPredict;
-    if (g_OllamaTemperature != 0.8f)     requestData["temperature"]     = g_OllamaTemperature;
-    if (g_OllamaTopP != 0.95f)           requestData["top_p"]           = g_OllamaTopP;
-    if (g_OllamaRepeatPenalty != 1.1f)   requestData["repeat_penalty"]  = g_OllamaRepeatPenalty;
-    if (g_OllamaNumCtx > 0)              requestData["num_ctx"]         = g_OllamaNumCtx;
+    if (g_OllamaNumPredict > 0) {
+        options["num_predict"] = g_OllamaNumPredict;
+        hasOptions = true;
+    }
+    if (g_OllamaTemperature != 0.8f) {
+        options["temperature"] = g_OllamaTemperature;
+        hasOptions = true;
+    }
+    if (g_OllamaTopP != 0.95f) {
+        options["top_p"] = g_OllamaTopP;
+        hasOptions = true;
+    }
+    if (g_OllamaRepeatPenalty != 1.1f) {
+        options["repeat_penalty"] = g_OllamaRepeatPenalty;
+        hasOptions = true;
+    }
+    if (g_OllamaNumCtx > 0) {
+        options["num_ctx"] = g_OllamaNumCtx;
+        hasOptions = true;
+    }
+    if (g_OllamaNumThreads > 0) {
+        options["num_thread"] = g_OllamaNumThreads;
+        hasOptions = true;
+        if(g_DebugEnabled) {
+            //LOG_INFO("server.loading", "[Ollama Chat] Setting num_thread to: {}", g_OllamaNumThreads);
+        }
+    } else if(g_DebugEnabled) {
+        //LOG_INFO("server.loading", "[Ollama Chat] g_OllamaNumThreads is: {} (not sending num_thread)", g_OllamaNumThreads);
+    }
+    if (!g_OllamaSeed.empty()) {
+        try {
+            int seedValue = std::stoi(g_OllamaSeed);
+            options["seed"] = seedValue; 
+            hasOptions = true;
+        } catch (const std::exception& e) {
+            if(g_DebugEnabled) {
+                LOG_INFO("server.loading", "[Ollama Chat] Invalid seed value: {}", g_OllamaSeed);
+            }
+        }
+    }
+
+    // Add options object if any options were set
+    if (hasOptions) {
+        requestData["options"] = options;
+    }
+
+    // Root-level parameters (these stay at root level)
     if (!g_OllamaStop.empty()) {
         // If comma-separated, convert to array
         std::vector<std::string> stopSeqs;
@@ -64,7 +112,6 @@ std::string QueryOllamaAPI(const std::string& prompt)
             requestData["stop"] = stopSeqs;
     }
     if (!g_OllamaSystemPrompt.empty())   requestData["system"]          = g_OllamaSystemPrompt;
-    if (!g_OllamaSeed.empty())           requestData["seed"]            = g_OllamaSeed;
 
     if (g_ThinkModeEnableForModule)
     {
@@ -87,7 +134,7 @@ std::string QueryOllamaAPI(const std::string& prompt)
         {
             LOG_INFO("server.loading", "[Ollama Chat] Failed to reach Ollama AI.");
         }
-        return "不能连接Ollama AI.";
+        return "Failed to reach Ollama AI.";
     }
 
     std::stringstream ss(responseBuffer);
@@ -117,7 +164,7 @@ std::string QueryOllamaAPI(const std::string& prompt)
                     "[Ollama Chat] JSON Parsing Error: {}",
                     e.what());
         }
-        return "回应进程错误(Json错误)";
+        return "Error processing response.";
     }
 
     std::string botReply = extractedResponse.str();
@@ -130,7 +177,7 @@ std::string QueryOllamaAPI(const std::string& prompt)
         {
             LOG_INFO("server.loading", "[Ollama Chat] No valid response extracted.");
         }
-        return "不好意思，我目前智商不在线！";
+        return "I'm having trouble understanding.";
     }
 
     if(g_DebugEnabled)

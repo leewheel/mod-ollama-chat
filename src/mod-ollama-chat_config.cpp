@@ -13,7 +13,6 @@
 // --------------------------------------------
 float      g_SayDistance       = 30.0f;
 float      g_YellDistance      = 100.0f;
-float      g_GeneralDistance   = 600.0f;
 float      g_RandomChatterRealPlayerDistance = 40.0f;
 float      g_EventChatterRealPlayerDistance = 40.0f;
 
@@ -23,7 +22,7 @@ float      g_EventChatterRealPlayerDistance = 40.0f;
 uint32_t   g_PlayerReplyChance = 90;
 uint32_t   g_BotReplyChance    = 10;
 uint32_t   g_MaxBotsToPick     = 2;
-uint32_t   g_RandomChatterBotCommentChance   = 25;
+uint32_t   g_RandomChatterBotCommentChance   = 5;
 uint32_t   g_RandomChatterMaxBotsPerPlayer   = 2;
 uint32_t   g_EventChatterBotCommentChance    = 15;
 uint32_t   g_EventChatterBotSelfCommentChance = 5;
@@ -39,6 +38,7 @@ float       g_OllamaTemperature = 0.8f;
 float       g_OllamaTopP = 0.95f;
 float       g_OllamaRepeatPenalty = 1.1f;
 uint32_t    g_OllamaNumCtx = 0;
+uint32_t    g_OllamaNumThreads = 0;
 std::string g_OllamaStop = "";
 std::string g_OllamaSystemPrompt = "";
 std::string g_OllamaSeed = "";
@@ -152,6 +152,45 @@ std::vector<std::string> g_EnvCommentDungeon;
 std::vector<std::string> g_EnvCommentUnfinishedQuest;
 
 // --------------------------------------------
+// Guild-Specific Random Chatter Templates
+// --------------------------------------------
+std::vector<std::string> g_GuildEnvCommentGuildMember;
+std::vector<std::string> g_GuildEnvCommentGuildRank;
+std::vector<std::string> g_GuildEnvCommentGuildBank;
+std::vector<std::string> g_GuildEnvCommentGuildMOTD;
+std::vector<std::string> g_GuildEnvCommentGuildInfo;
+std::vector<std::string> g_GuildEnvCommentGuildOnlineMembers;
+std::vector<std::string> g_GuildEnvCommentGuildRaid;
+std::vector<std::string> g_GuildEnvCommentGuildEndgame;
+std::vector<std::string> g_GuildEnvCommentGuildStrategy;
+std::vector<std::string> g_GuildEnvCommentGuildGroup;
+std::vector<std::string> g_GuildEnvCommentGuildPvP;
+std::vector<std::string> g_GuildEnvCommentGuildCommunity;
+
+// --------------------------------------------
+// Guild-Specific Random Chatter Configuration
+// --------------------------------------------
+bool        g_EnableGuildEventChatter             = true;
+bool        g_EnableGuildRandomAmbientChatter      = true;
+uint32_t    g_GuildRandomChatterChance             = 10;
+uint32_t    g_GuildChatterBotCommentChance          = 25;
+uint32_t    g_GuildChatterMaxBotsPerEvent           = 2;
+
+// --------------------------------------------
+// Guild-Specific Event Chatter Templates
+// --------------------------------------------
+std::string g_GuildEventTypeLevelUp = "";
+std::string g_GuildEventTypeDungeonComplete = "";
+std::string g_GuildEventTypeEpicGear = "";
+std::string g_GuildEventTypeRareGear = "";
+std::string g_GuildEventTypeGuildJoin = "";
+std::string g_GuildEventTypeGuildLeave = "";
+std::string g_GuildEventTypeGuildPromotion = "";
+std::string g_GuildEventTypeGuildDemotion = "";
+std::string g_GuildEventTypeGuildLogin = "";
+std::string g_GuildEventTypeGuildAchievement = "";
+
+// --------------------------------------------
 // Event Chatter Templates
 // --------------------------------------------
 std::string g_EventTypeDefeated;           // "defeated"
@@ -167,6 +206,36 @@ std::string g_EventTypeWonDuel;            // "won duel against"
 std::string g_EventTypeLeveledUp;          // "leveled up"
 std::string g_EventTypeAchievement;        // "earned achievement"
 std::string g_EventTypeUsedObject;         // "used object"
+
+// Chance variables for normal events
+int g_EventTypeDefeated_Chance = 0;
+int g_EventTypeDefeatedPlayer_Chance = 0;
+int g_EventTypePetDefeated_Chance = 0;
+int g_EventTypeGotItem_Chance = 0;
+int g_EventTypeDied_Chance = 0;
+int g_EventTypeCompletedQuest_Chance = 0;
+int g_EventTypeLearnedSpell_Chance = 0;
+int g_EventTypeRequestedDuel_Chance = 0;
+int g_EventTypeStartedDueling_Chance = 0;
+int g_EventTypeWonDuel_Chance = 0;
+int g_EventTypeLeveledUp_Chance = 0;
+int g_EventTypeAchievement_Chance = 0;
+int g_EventTypeUsedObject_Chance = 0;
+
+// Chance variables for guild events
+int g_GuildEventTypeEpicGear_Chance = 0;
+int g_GuildEventTypeRareGear_Chance = 0;
+int g_GuildEventTypeGuildJoin_Chance = 0;
+int g_GuildEventTypeGuildLogin_Chance = 0;
+int g_GuildEventTypeGuildLeave_Chance = 0;
+int g_GuildEventTypeGuildPromotion_Chance = 0;
+int g_GuildEventTypeGuildDemotion_Chance = 0;
+int g_GuildEventTypeGuildAchievement_Chance = 0;
+int g_GuildEventTypeLevelUp_Chance = 0;
+int g_GuildEventTypeDungeonComplete_Chance = 0;
+
+// Event Cooldown
+uint32_t g_EventCooldownTime = 10;
 
 
 static std::vector<std::string> SplitString(const std::string& str, char delim)
@@ -192,7 +261,7 @@ void LoadBotPersonalityList()
     QueryResult tableExists = CharacterDatabase.Query("SELECT * FROM information_schema.tables WHERE table_schema = 'acore_characters' AND table_name = 'mod_ollama_chat_personality' LIMIT 1");
     if (!tableExists)
     {
-        LOG_ERROR("server.loading", "[Ollama Chat] LoadBotPersonalityList Error Please source the required database table first");
+        LOG_ERROR("server.loading", "[Ollama Chat] Please source the required database table first");
         return;
     }
 
@@ -262,7 +331,6 @@ void LoadOllamaChatConfig()
 {
     g_SayDistance                     = sConfigMgr->GetOption<float>("OllamaChat.SayDistance", 30.0f);
     g_YellDistance                    = sConfigMgr->GetOption<float>("OllamaChat.YellDistance", 100.0f);
-    g_GeneralDistance                 = sConfigMgr->GetOption<float>("OllamaChat.GeneralDistance", 600.0f);
     g_PlayerReplyChance               = sConfigMgr->GetOption<uint32_t>("OllamaChat.PlayerReplyChance", 90);
     g_BotReplyChance                  = sConfigMgr->GetOption<uint32_t>("OllamaChat.BotReplyChance", 10);
     g_MaxBotsToPick                   = sConfigMgr->GetOption<uint32_t>("OllamaChat.MaxBotsToPick", 2);
@@ -273,6 +341,7 @@ void LoadOllamaChatConfig()
     g_OllamaTopP                      = sConfigMgr->GetOption<float>("OllamaChat.TopP", 0.95f);
     g_OllamaRepeatPenalty             = sConfigMgr->GetOption<float>("OllamaChat.RepeatPenalty", 1.1f);
     g_OllamaNumCtx                    = sConfigMgr->GetOption<uint32_t>("OllamaChat.NumCtx", 0);
+    g_OllamaNumThreads                = sConfigMgr->GetOption<uint32_t>("OllamaChat.NumThreads", 0);
     g_OllamaStop                      = sConfigMgr->GetOption<std::string>("OllamaChat.Stop", "");
     g_OllamaSystemPrompt              = sConfigMgr->GetOption<std::string>("OllamaChat.SystemPrompt", "");
     g_OllamaSeed                      = sConfigMgr->GetOption<std::string>("OllamaChat.Seed", "");
@@ -291,6 +360,9 @@ void LoadOllamaChatConfig()
     g_RandomChatterRealPlayerDistance = sConfigMgr->GetOption<float>("OllamaChat.RandomChatterRealPlayerDistance", 40.0f);
     g_RandomChatterBotCommentChance   = sConfigMgr->GetOption<uint32_t>("OllamaChat.RandomChatterBotCommentChance", 25);
     g_RandomChatterMaxBotsPerPlayer   = sConfigMgr->GetOption<uint32_t>("OllamaChat.RandomChatterMaxBotsPerPlayer", 2);
+
+    g_EnableGuildRandomAmbientChatter = sConfigMgr->GetOption<bool>("OllamaChat.EnableGuildRandomAmbientChatter", true);
+    g_GuildRandomChatterChance        = sConfigMgr->GetOption<uint32_t>("OllamaChat.GuildRandomChatterChance", 10);
 
     g_EventChatterRealPlayerDistance = sConfigMgr->GetOption<float>("OllamaChat.EventChatterRealPlayerDistance", 40.0f);
     g_EventChatterBotCommentChance   = sConfigMgr->GetOption<uint32_t>("OllamaChat.EventChatterBotCommentChance", 15);
@@ -370,13 +442,13 @@ void LoadOllamaChatConfig()
         std::string val = sConfigMgr->GetOption<std::string>(key, "");
         std::vector<std::string> result;
         std::istringstream iss(val);
-        std::string line;
-        while (std::getline(iss, line)) {
-            // Trim whitespace (both ends)
-            size_t start = line.find_first_not_of(" \t\r\n");
-            size_t end = line.find_last_not_of(" \t\r\n");
+        std::string token;
+        while (std::getline(iss, token, '|')) { // Split by '|'
+            // Trim whitespace from token
+            size_t start = token.find_first_not_of(" \t\r\n");
+            size_t end = token.find_last_not_of(" \t\r\n");
             if (start != std::string::npos && end != std::string::npos)
-                result.push_back(line.substr(start, end - start + 1));
+                result.push_back(token.substr(start, end - start + 1));
         }
         if (result.empty() && !defaults.empty())
             return defaults;
@@ -396,12 +468,73 @@ void LoadOllamaChatConfig()
     g_EnvCommentDungeon         = LoadEnvCommentVector("OllamaChat.EnvCommentDungeon", { "" });
     g_EnvCommentUnfinishedQuest = LoadEnvCommentVector("OllamaChat.EnvCommentUnfinishedQuest", { "" });
 
+    // Guild-specific random chatter templates
+    g_GuildEnvCommentGuildMember = LoadEnvCommentVector("OllamaChat.GuildEnvCommentGuildMember", { "" });
+    g_GuildEnvCommentGuildRank = LoadEnvCommentVector("OllamaChat.GuildEnvCommentGuildRank", { "" });
+    g_GuildEnvCommentGuildBank = LoadEnvCommentVector("OllamaChat.GuildEnvCommentGuildBank", { "" });
+    g_GuildEnvCommentGuildMOTD = LoadEnvCommentVector("OllamaChat.GuildEnvCommentGuildMOTD", { "" });
+    g_GuildEnvCommentGuildInfo = LoadEnvCommentVector("OllamaChat.GuildEnvCommentGuildInfo", { "" });
+    g_GuildEnvCommentGuildOnlineMembers = LoadEnvCommentVector("OllamaChat.GuildEnvCommentGuildOnlineMembers", { "" });
+    g_GuildEnvCommentGuildRaid = LoadEnvCommentVector("OllamaChat.GuildEnvCommentGuildRaid", { "" });
+    g_GuildEnvCommentGuildEndgame = LoadEnvCommentVector("OllamaChat.GuildEnvCommentGuildEndgame", { "" });
+    g_GuildEnvCommentGuildStrategy = LoadEnvCommentVector("OllamaChat.GuildEnvCommentGuildStrategy", { "" });
+    g_GuildEnvCommentGuildGroup = LoadEnvCommentVector("OllamaChat.GuildEnvCommentGuildGroup", { "" });
+    g_GuildEnvCommentGuildPvP = LoadEnvCommentVector("OllamaChat.GuildEnvCommentGuildPvP", { "" });
+    g_GuildEnvCommentGuildCommunity = LoadEnvCommentVector("OllamaChat.GuildEnvCommentGuildCommunity", { "" });
+
+    // Guild-specific configuration
+    g_EnableGuildEventChatter = sConfigMgr->GetOption<bool>("OllamaChat.EnableGuildEventChatter", true);
+    g_GuildChatterBotCommentChance = sConfigMgr->GetOption<uint32_t>("OllamaChat.GuildChatterBotCommentChance", 25);
+    g_GuildChatterMaxBotsPerEvent = sConfigMgr->GetOption<uint32_t>("OllamaChat.GuildChatterMaxBotsPerEvent", 2);
+
+    // Guild-specific event templates
+    g_GuildEventTypeLevelUp = sConfigMgr->GetOption<std::string>("OllamaChat.GuildEventTypeLevelUp", "");
+    g_GuildEventTypeDungeonComplete = sConfigMgr->GetOption<std::string>("OllamaChat.GuildEventTypeDungeonComplete", "");
+    g_GuildEventTypeEpicGear = sConfigMgr->GetOption<std::string>("OllamaChat.GuildEventTypeEpicGear", "");
+    g_GuildEventTypeRareGear = sConfigMgr->GetOption<std::string>("OllamaChat.GuildEventTypeRareGear", "");
+    g_GuildEventTypeGuildJoin = sConfigMgr->GetOption<std::string>("OllamaChat.GuildEventTypeGuildJoin", "");
+    g_GuildEventTypeGuildLogin = sConfigMgr->GetOption<std::string>("OllamaChat.GuildEventTypeGuildLogin", "");
+    g_GuildEventTypeGuildLeave = sConfigMgr->GetOption<std::string>("OllamaChat.GuildEventTypeGuildLeave", "");
+    g_GuildEventTypeGuildPromotion = sConfigMgr->GetOption<std::string>("OllamaChat.GuildEventTypeGuildPromotion", "");
+    g_GuildEventTypeGuildDemotion = sConfigMgr->GetOption<std::string>("OllamaChat.GuildEventTypeGuildDemotion", "");
+
+    // Load chance variables for normal events
+    g_EventTypeDefeated_Chance = sConfigMgr->GetOption<int>("OllamaChat.EventTypeDefeated_Chance", 0);
+    g_EventTypeDefeatedPlayer_Chance = sConfigMgr->GetOption<int>("OllamaChat.EventTypeDefeatedPlayer_Chance", 0);
+    g_EventTypePetDefeated_Chance = sConfigMgr->GetOption<int>("OllamaChat.EventTypePetDefeated_Chance", 0);
+    g_EventTypeGotItem_Chance = sConfigMgr->GetOption<int>("OllamaChat.EventTypeGotItem_Chance", 0);
+    g_EventTypeDied_Chance = sConfigMgr->GetOption<int>("OllamaChat.EventTypeDied_Chance", 0);
+    g_EventTypeCompletedQuest_Chance = sConfigMgr->GetOption<int>("OllamaChat.EventTypeCompletedQuest_Chance", 0);
+    g_EventTypeLearnedSpell_Chance = sConfigMgr->GetOption<int>("OllamaChat.EventTypeLearnedSpell_Chance", 0);
+    g_EventTypeRequestedDuel_Chance = sConfigMgr->GetOption<int>("OllamaChat.EventTypeRequestedDuel_Chance", 0);
+    g_EventTypeStartedDueling_Chance = sConfigMgr->GetOption<int>("OllamaChat.EventTypeStartedDueling_Chance", 0);
+    g_EventTypeWonDuel_Chance = sConfigMgr->GetOption<int>("OllamaChat.EventTypeWonDuel_Chance", 0);
+    g_EventTypeLeveledUp_Chance = sConfigMgr->GetOption<int>("OllamaChat.EventTypeLeveledUp_Chance", 0);
+    g_EventTypeAchievement_Chance = sConfigMgr->GetOption<int>("OllamaChat.EventTypeAchievement_Chance", 0);
+    g_EventTypeUsedObject_Chance = sConfigMgr->GetOption<int>("OllamaChat.EventTypeUsedObject_Chance", 0);
+
+    // Load chance variables for guild events
+    g_GuildEventTypeEpicGear_Chance = sConfigMgr->GetOption<int>("OllamaChat.GuildEventTypeEpicGear_Chance", 0);
+    g_GuildEventTypeRareGear_Chance = sConfigMgr->GetOption<int>("OllamaChat.GuildEventTypeRareGear_Chance", 0);
+    g_GuildEventTypeGuildJoin_Chance = sConfigMgr->GetOption<int>("OllamaChat.GuildEventTypeGuildJoin_Chance", 0);
+    g_GuildEventTypeGuildLogin_Chance = sConfigMgr->GetOption<int>("OllamaChat.GuildEventTypeGuildLogin_Chance", 0);
+    g_GuildEventTypeGuildLeave_Chance = sConfigMgr->GetOption<int>("OllamaChat.GuildEventTypeGuildLeave_Chance", 0);
+    g_GuildEventTypeGuildPromotion_Chance = sConfigMgr->GetOption<int>("OllamaChat.GuildEventTypeGuildPromotion_Chance", 0);
+    g_GuildEventTypeGuildDemotion_Chance = sConfigMgr->GetOption<int>("OllamaChat.GuildEventTypeGuildDemotion_Chance", 0);
+    g_GuildEventTypeGuildAchievement_Chance = sConfigMgr->GetOption<int>("OllamaChat.GuildEventTypeGuildAchievement_Chance", 0);
+    g_GuildEventTypeLevelUp_Chance = sConfigMgr->GetOption<int>("OllamaChat.GuildEventTypeLevelUp_Chance", 0);
+    g_GuildEventTypeDungeonComplete_Chance = sConfigMgr->GetOption<int>("OllamaChat.GuildEventTypeDungeonComplete_Chance", 0);
+
+
+    // Cooldown time for events
+    g_EventCooldownTime = sConfigMgr->GetOption<uint32_t>("OllamaChat.EventCooldownTime", 10);
+
     LOG_INFO("server.loading",
-             "[Ollama Chat] 配置已加载: \nEnabled = {}, \nSayDistance = {}, \nYellDistance = {}, "
-             "\nGeneralDistance = {}, \nPlayerReplyChance = {}%, \nBotReplyChance = {}%, \nMaxBotsToPick = {}, "
-             "\nUrl = {}, \nModel = {}, \nMaxConcurrentQueries = {}, \nEnableRandomChatter = {}, \nMinRandInt = {}, \nMaxRandInt = {}, \nRandomChatterRealPlayerDistance = {}, "
-             "\nRandomChatterBotCommentChance = {}. \nMaxConcurrentQueries = {}. \nExtra blacklist commands: {}",
-             g_Enable, g_SayDistance, g_YellDistance, g_GeneralDistance,
+             "[Ollama Chat] Config loaded: Enabled = {}, SayDistance = {}, YellDistance = {}, "
+             "PlayerReplyChance = {}%, BotReplyChance = {}%, MaxBotsToPick = {}, "
+             "Url = {}, Model = {}, MaxConcurrentQueries = {}, EnableRandomChatter = {}, MinRandInt = {}, MaxRandInt = {}, RandomChatterRealPlayerDistance = {}, "
+             "RandomChatterBotCommentChance = {}. MaxConcurrentQueries = {}. Extra blacklist commands: {}",
+             g_Enable, g_SayDistance, g_YellDistance,
              g_PlayerReplyChance, g_BotReplyChance, g_MaxBotsToPick,
              g_OllamaUrl, g_OllamaModel, g_MaxConcurrentQueries,
              g_EnableRandomChatter, g_MinRandomInterval, g_MaxRandomInterval, g_RandomChatterRealPlayerDistance,

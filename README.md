@@ -2,10 +2,14 @@
   <img src="./icon.png" alt="Ollama Chat Module" title="Ollama Chat Module Icon">
 </p>
 
+
 # AzerothCore + Playerbots Module: mod-ollama-chat
 
+
 > [!CAUTION]
-> This module is very early stages and can bog down your server due to the nature of running local LLM. Please proceed with this in mind.
+> **LLM/AI Disclaimer:** Large Language Models (LLMs) such as those used by this module do not possess intelligence, reasoning, or true understanding. They generate text by predicting the most likely next word based on patterns in their training data—matching vectors, not thinking or comprehension. The quality and relevance of responses depend entirely on the model you use, its training data, and its configuration. Results may vary, and sometimes the output may be irrelevant, nonsensical, or simply not work as expected. This is a fundamental limitation of current AI and LLM technology. Use with realistic expectations.
+>
+> This module is also in development and can bog down your server due to the nature of running local LLM. Please proceed with this in mind.
 
 ## Overview
 

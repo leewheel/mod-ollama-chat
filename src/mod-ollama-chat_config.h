@@ -15,7 +15,6 @@
 // --------------------------------------------
 extern float      g_SayDistance;
 extern float      g_YellDistance;
-extern float      g_GeneralDistance;
 extern float      g_RandomChatterRealPlayerDistance;
 extern float      g_EventChatterRealPlayerDistance;
 
@@ -41,6 +40,7 @@ extern float       g_OllamaTemperature;
 extern float       g_OllamaTopP;
 extern float       g_OllamaRepeatPenalty;
 extern uint32_t    g_OllamaNumCtx;
+extern uint32_t    g_OllamaNumThreads;
 extern std::string g_OllamaStop;
 extern std::string g_OllamaSystemPrompt;
 extern std::string g_OllamaSeed;
@@ -136,6 +136,72 @@ extern std::vector<std::string> g_EnvCommentDungeon;
 extern std::vector<std::string> g_EnvCommentUnfinishedQuest;
 
 // --------------------------------------------
+// Guild-Specific Random Chatter Templates
+// --------------------------------------------
+extern std::vector<std::string> g_GuildEnvCommentGuildMember;
+extern std::vector<std::string> g_GuildEnvCommentGuildRank;
+extern std::vector<std::string> g_GuildEnvCommentGuildBank;
+extern std::vector<std::string> g_GuildEnvCommentGuildMOTD;
+extern std::vector<std::string> g_GuildEnvCommentGuildInfo;
+extern std::vector<std::string> g_GuildEnvCommentGuildOnlineMembers;
+extern std::vector<std::string> g_GuildEnvCommentGuildRaid;
+extern std::vector<std::string> g_GuildEnvCommentGuildEndgame;
+extern std::vector<std::string> g_GuildEnvCommentGuildStrategy;
+extern std::vector<std::string> g_GuildEnvCommentGuildGroup;
+extern std::vector<std::string> g_GuildEnvCommentGuildPvP;
+extern std::vector<std::string> g_GuildEnvCommentGuildCommunity;
+
+// --------------------------------------------
+// Guild-Specific Random Chatter Configuration
+// --------------------------------------------
+extern bool        g_EnableGuildEventChatter;
+extern bool        g_EnableGuildRandomAmbientChatter;
+extern uint32_t    g_GuildRandomChatterChance;
+extern uint32_t    g_GuildChatterBotCommentChance;
+extern uint32_t    g_GuildChatterMaxBotsPerEvent;
+
+// --------------------------------------------
+// Guild-Specific Event Chatter Templates
+// --------------------------------------------
+extern std::string g_GuildEventTypeLevelUp;
+extern std::string g_GuildEventTypeDungeonComplete;
+extern std::string g_GuildEventTypeEpicGear;
+extern std::string g_GuildEventTypeRareGear;
+extern std::string g_GuildEventTypeGuildJoin;
+extern std::string g_GuildEventTypeGuildLeave;
+extern std::string g_GuildEventTypeGuildPromotion;
+extern std::string g_GuildEventTypeGuildDemotion;
+extern std::string g_GuildEventTypeGuildLogin;
+extern std::string g_GuildEventTypeGuildAchievement;
+
+// Chance variables for normal events
+extern int g_EventTypeDefeated_Chance;
+extern int g_EventTypeDefeatedPlayer_Chance;
+extern int g_EventTypePetDefeated_Chance;
+extern int g_EventTypeGotItem_Chance;
+extern int g_EventTypeDied_Chance;
+extern int g_EventTypeCompletedQuest_Chance;
+extern int g_EventTypeLearnedSpell_Chance;
+extern int g_EventTypeRequestedDuel_Chance;
+extern int g_EventTypeStartedDueling_Chance;
+extern int g_EventTypeWonDuel_Chance;
+extern int g_EventTypeLeveledUp_Chance;
+extern int g_EventTypeAchievement_Chance;
+extern int g_EventTypeUsedObject_Chance;
+
+// Chance variables for guild events
+extern int g_GuildEventTypeEpicGear_Chance;
+extern int g_GuildEventTypeRareGear_Chance;
+extern int g_GuildEventTypeGuildJoin_Chance;
+extern int g_GuildEventTypeGuildLogin_Chance;
+extern int g_GuildEventTypeGuildLeave_Chance;
+extern int g_GuildEventTypeGuildPromotion_Chance;
+extern int g_GuildEventTypeGuildDemotion_Chance;
+extern int g_GuildEventTypeGuildAchievement_Chance;
+extern int g_GuildEventTypeLevelUp_Chance;
+extern int g_GuildEventTypeDungeonComplete_Chance;
+
+// --------------------------------------------
 // Bot-Player Sentiment Tracking System
 // --------------------------------------------
 extern bool        g_EnableSentimentTracking;
@@ -168,6 +234,9 @@ extern std::string g_EventTypeWonDuel;            // "won duel against"
 extern std::string g_EventTypeLeveledUp;          // "leveled up"
 extern std::string g_EventTypeAchievement;        // "earned achievement"
 extern std::string g_EventTypeUsedObject;         // "used object"
+
+// Event Cooldown
+extern uint32_t g_EventCooldownTime;
 
 // --------------------------------------------
 // Loader Functions
