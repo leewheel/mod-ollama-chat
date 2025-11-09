@@ -80,7 +80,7 @@
 
 2. **Install Dependencies:**
 
-   > [!NOTE]
+   > [!TIP]
    > **nlohmann/json and yhirose/cpp-httplib are bundled** with the module - you don't need to install them separately!
 
    ### Windows (vcpkg):
@@ -196,6 +196,61 @@ This should return a JSON response listing available models. If you get a connec
 ## Configuration Options
 
 > For a complete list of all available configuration options with comments and defaults, see `mod-ollama-chat.conf.dist` included in this repository.
+
+## Text Commands
+
+The module provides several in-game text commands for administrators (Game Masters) to manage and monitor the Ollama chat functionality. All commands require **SEC_ADMINISTRATOR** security level (GM level 3 or higher).
+
+### `.ollama reload`
+Reloads the module's configuration from `mod-ollama-chat.conf` without restarting the server. Also reloads personality packs and sentiment data.
+- **Security Level:** SEC_ADMINISTRATOR
+- **Usage:** `.ollama reload`
+- **Console Equivalent:** `ollama reload`
+
+### `.ollama sentiment view [bot_name] [player_name]`
+Displays sentiment tracking data between bots and players.
+- **Security Level:** SEC_ADMINISTRATOR
+- **Usage:**
+  - `.ollama sentiment view` - Shows all sentiment data
+  - `.ollama sentiment view BotName` - Shows sentiment data for a specific bot
+  - `.ollama sentiment view BotName PlayerName` - Shows sentiment between specific bot and player
+- **Console Equivalent:** `ollama sentiment view [bot] [player]`
+
+### `.ollama sentiment set <bot_name> <player_name> <value>`
+Manually sets the sentiment value between a bot and player (0.0 to 1.0).
+- **Security Level:** SEC_ADMINISTRATOR
+- **Usage:** `.ollama sentiment set BotName PlayerName 0.8`
+- **Console Equivalent:** `ollama sentiment set <bot> <player> <value>`
+
+### `.ollama sentiment reset [bot_name] [player_name]`
+Resets sentiment data to default values.
+- **Security Level:** SEC_ADMINISTRATOR
+- **Usage:**
+  - `.ollama sentiment reset` - Resets all sentiment data
+  - `.ollama sentiment reset BotName` - Resets all sentiment data for a specific bot
+  - `.ollama sentiment reset BotName PlayerName` - Resets sentiment between specific bot and player
+- **Console Equivalent:** `ollama sentiment reset [bot] [player]`
+
+### `.ollama personality get <bot_name>`
+Displays the current personality assigned to a bot.
+- **Security Level:** SEC_ADMINISTRATOR
+- **Usage:** `.ollama personality get BotName`
+- **Console Equivalent:** `ollama personality get <bot>`
+
+### `.ollama personality set <bot_name> <personality>`
+Manually assigns a personality to a bot.
+- **Security Level:** SEC_ADMINISTRATOR
+- **Usage:** `.ollama personality set BotName Gamer`
+- **Console Equivalent:** `ollama personality set <bot> <personality>`
+
+### `.ollama personality list`
+Lists all available personalities and their descriptions.
+- **Security Level:** SEC_ADMINISTRATOR
+- **Usage:** `.ollama personality list`
+- **Console Equivalent:** `ollama personality list`
+
+> [!NOTE]
+> All commands can also be executed from the server console by replacing the leading dot (.) with the command prefix used in your console (typically none or a custom prefix).
 
 ## How It Works
 
