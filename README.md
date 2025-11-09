@@ -80,9 +80,6 @@
 
 2. **Install Dependencies:**
 
-   > [!TIP]
-   > **nlohmann/json and yhirose/cpp-httplib are bundled** with the module - you don't need to install them separately!
-
    ### Windows (vcpkg):
    ```bash
    vcpkg install fmt
