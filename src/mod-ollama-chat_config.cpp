@@ -1,5 +1,6 @@
 #include "mod-ollama-chat_config.h"
 #include "mod-ollama-chat_sentiment.h"
+#include "mod-ollama-chat_rag.h"
 #include "Config.h"
 #include "Log.h"
 #include "mod-ollama-chat_api.h"
@@ -57,6 +58,7 @@ bool        g_EnableRandomChatter             = true;
 bool        g_EnableEventChatter              = true;
 bool        g_EnableRPPersonalities           = false;
 bool        g_DebugEnabled                    = false;
+bool        g_DebugShowFullPrompt             = false;
 
 // --------------------------------------------
 // Think Mode Support
@@ -89,6 +91,7 @@ std::string g_ChatExtraInfoTemplate;
 std::unordered_map<uint64_t, std::string> g_BotPersonalityList;
 std::unordered_map<std::string, std::string> g_PersonalityPrompts;
 std::vector<std::string> g_PersonalityKeys;
+std::vector<std::string> g_PersonalityKeysRandomOnly;
 std::string g_DefaultPersonalityPrompt;
 
 // --------------------------------------------
@@ -126,6 +129,18 @@ std::string g_SentimentPromptTemplate = "Your relationship sentiment with {playe
 std::unordered_map<uint64_t, std::unordered_map<uint64_t, float>> g_BotPlayerSentiments;
 std::mutex g_SentimentMutex;
 time_t g_LastSentimentSaveTime = 0;
+
+// --------------------------------------------
+// RAG (Retrieval-Augmented Generation) System
+// --------------------------------------------
+bool        g_EnableRAG = false;
+std::string g_RAGDataPath = "rag/";
+uint32_t    g_RAGMaxRetrievedItems = 3;
+float       g_RAGSimilarityThreshold = 0.3f;
+std::string g_RAGPromptTemplate;
+
+class OllamaRAGSystem;
+OllamaRAGSystem* g_RAGSystem = nullptr;
 
 // --------------------------------------------
 // Blacklist: Prefixes for Commands (not chat)
@@ -236,6 +251,11 @@ int g_GuildEventTypeDungeonComplete_Chance = 0;
 
 // Event Cooldown
 uint32_t g_EventCooldownTime = 10;
+
+// --------------------------------------------
+// Party Restriction Settings
+// --------------------------------------------
+bool g_RestrictBotsToPartyMembers = false;
 
 
 static std::vector<std::string> SplitString(const std::string& str, char delim)
@@ -354,6 +374,7 @@ void LoadOllamaChatConfig()
     g_EnableEventChatter              = sConfigMgr->GetOption<bool>("OllamaChat.EnableEventChatter", true);
 
     g_DebugEnabled                    = sConfigMgr->GetOption<bool>("OllamaChat.DebugEnabled", false);
+    g_DebugShowFullPrompt             = sConfigMgr->GetOption<bool>("OllamaChat.DebugShowFullPrompt", false);
 
     g_MinRandomInterval               = sConfigMgr->GetOption<uint32_t>("OllamaChat.MinRandomInterval", 45);
     g_MaxRandomInterval               = sConfigMgr->GetOption<uint32_t>("OllamaChat.MaxRandomInterval", 180);
@@ -400,6 +421,13 @@ void LoadOllamaChatConfig()
     g_SentimentSaveInterval           = sConfigMgr->GetOption<uint32_t>("OllamaChat.SentimentSaveInterval", 10);
     g_SentimentAnalysisPrompt         = sConfigMgr->GetOption<std::string>("OllamaChat.SentimentAnalysisPrompt", "Analyze the sentiment of this message: \"{message}\". Respond only with: POSITIVE, NEGATIVE, or NEUTRAL.");
     g_SentimentPromptTemplate         = sConfigMgr->GetOption<std::string>("OllamaChat.SentimentPromptTemplate", "Your relationship sentiment with {player_name} is {sentiment_value} (0.0=hostile, 0.5=neutral, 1.0=friendly). Use this to guide your tone and response.");
+
+    // RAG (Retrieval-Augmented Generation) System
+    g_EnableRAG                       = sConfigMgr->GetOption<bool>("OllamaChat.EnableRAG", false);
+    g_RAGDataPath                     = sConfigMgr->GetOption<std::string>("OllamaChat.RAGDataPath", "rag/");
+    g_RAGMaxRetrievedItems            = sConfigMgr->GetOption<uint32_t>("OllamaChat.RAGMaxRetrievedItems", 3);
+    g_RAGSimilarityThreshold          = sConfigMgr->GetOption<float>("OllamaChat.RAGSimilarityThreshold", 0.3f);
+    g_RAGPromptTemplate               = sConfigMgr->GetOption<std::string>("OllamaChat.RAGPromptTemplate", "RELEVANT INFORMATION:\n{rag_info}\nUse this information to provide accurate and detailed responses when applicable.");
 
     g_ThinkModeEnableForModule        = sConfigMgr->GetOption<bool>("OllamaChat.ThinkModeEnableForModule", false);
 
@@ -529,6 +557,9 @@ void LoadOllamaChatConfig()
     // Cooldown time for events
     g_EventCooldownTime = sConfigMgr->GetOption<uint32_t>("OllamaChat.EventCooldownTime", 10);
 
+    // Party restriction settings
+    g_RestrictBotsToPartyMembers = sConfigMgr->GetOption<bool>("OllamaChat.RestrictBotsToPartyMembers", false);
+
     LOG_INFO("server.loading",
              "[Ollama Chat] Config loaded: Enabled = {}, SayDistance = {}, YellDistance = {}, "
              "PlayerReplyChance = {}%, BotReplyChance = {}%, MaxBotsToPick = {}, "
@@ -545,8 +576,9 @@ void LoadPersonalityTemplatesFromDB()
 {
     g_PersonalityPrompts.clear();
     g_PersonalityKeys.clear();
+    g_PersonalityKeysRandomOnly.clear();
 
-    QueryResult result = CharacterDatabase.Query("SELECT `key`, `prompt` FROM `mod_ollama_chat_personality_templates`");
+    QueryResult result = CharacterDatabase.Query("SELECT `key`, `prompt`, `manual_only` FROM `mod_ollama_chat_personality_templates`");
     if (!result)
     {
         LOG_ERROR("server.loading", "[Ollama Chat] No personality templates found in the database!");
@@ -557,12 +589,20 @@ void LoadPersonalityTemplatesFromDB()
     {
         std::string key = (*result)[0].Get<std::string>();
         std::string prompt = (*result)[1].Get<std::string>();
+        bool manualOnly = (*result)[2].Get<bool>();
+        
         g_PersonalityPrompts[key] = prompt;
         g_PersonalityKeys.push_back(key);
+        
+        // Only add to random pool if not manual_only
+        if (!manualOnly)
+        {
+            g_PersonalityKeysRandomOnly.push_back(key);
+        }
     } while (result->NextRow());
 
-    LOG_INFO("server.loading", "[Ollama Chat] Cached {} personalities.", g_PersonalityKeys.size());
-
+    LOG_INFO("server.loading", "[Ollama Chat] Cached {} personalities ({} available for random assignment).", 
+             g_PersonalityKeys.size(), g_PersonalityKeysRandomOnly.size());
 }
 
 void LoadBotConversationHistoryFromDB()
@@ -603,4 +643,29 @@ void OllamaChatConfigWorldScript::OnStartup()
     LoadBotPersonalityList();
     LoadBotConversationHistoryFromDB();
     InitializeSentimentTracking();
+
+    // Initialize RAG system if enabled
+    if (g_EnableRAG) {
+        if (g_RAGSystem) {
+            delete g_RAGSystem;
+        }
+        g_RAGSystem = new OllamaRAGSystem();
+        if (!g_RAGSystem->Initialize()) {
+            LOG_ERROR("server.loading", "[Ollama Chat] Failed to initialize RAG system");
+            delete g_RAGSystem;
+            g_RAGSystem = nullptr;
+        } else {
+            LOG_INFO("server.loading", "[Ollama Chat] RAG system initialized successfully");
+        }
+    }
+}
+
+void OllamaChatConfigWorldScript::OnShutdown()
+{
+    // Clean up RAG system
+    if (g_RAGSystem) {
+        delete g_RAGSystem;
+        g_RAGSystem = nullptr;
+        LOG_INFO("server.loading", "[Ollama Chat] RAG system cleaned up");
+    }
 }

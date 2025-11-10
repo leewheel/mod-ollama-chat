@@ -59,6 +59,7 @@ extern bool        g_EnableRandomChatter;
 extern bool        g_EnableEventChatter;
 extern bool        g_EnableRPPersonalities;
 extern bool        g_DebugEnabled;
+extern bool        g_DebugShowFullPrompt;
 
 // --------------------------------------------
 // Random Chatter Timing
@@ -86,6 +87,7 @@ extern std::string g_ChatExtraInfoTemplate;
 extern std::unordered_map<uint64_t, std::string> g_BotPersonalityList;
 extern std::unordered_map<std::string, std::string> g_PersonalityPrompts;
 extern std::vector<std::string> g_PersonalityKeys;
+extern std::vector<std::string> g_PersonalityKeysRandomOnly; // Personalities that can be randomly assigned
 extern std::string g_DefaultPersonalityPrompt;
 
 // --------------------------------------------
@@ -217,6 +219,18 @@ extern std::mutex g_SentimentMutex;
 extern time_t g_LastSentimentSaveTime;
 
 // --------------------------------------------
+// RAG (Retrieval-Augmented Generation) System
+// --------------------------------------------
+extern bool        g_EnableRAG;                          // Enable/disable RAG feature
+extern std::string g_RAGDataPath;                        // Path to RAG data files
+extern uint32_t    g_RAGMaxRetrievedItems;               // Max items to retrieve
+extern float       g_RAGSimilarityThreshold;             // Similarity threshold for retrieval
+extern std::string g_RAGPromptTemplate;                  // Template for RAG info in prompts
+
+class OllamaRAGSystem;
+extern OllamaRAGSystem* g_RAGSystem;                     // Global RAG system instance
+
+// --------------------------------------------
 // Event Chatter: Event Type Strings
 // These control the event type string sent to eventChatter for world event prompts.
 // Values are loaded from conf (see mod_ollama_chat.conf.dist)
@@ -239,6 +253,11 @@ extern std::string g_EventTypeUsedObject;         // "used object"
 extern uint32_t g_EventCooldownTime;
 
 // --------------------------------------------
+// Party Restriction Settings
+// --------------------------------------------
+extern bool g_RestrictBotsToPartyMembers;
+
+// --------------------------------------------
 // Loader Functions
 // --------------------------------------------
 void LoadOllamaChatConfig();
@@ -254,6 +273,7 @@ class OllamaChatConfigWorldScript : public WorldScript
 public:
     OllamaChatConfigWorldScript();
     void OnStartup() override;
+    void OnShutdown() override;
 };
 
 #endif // MOD_OLLAMA_CHAT_CONFIG_H

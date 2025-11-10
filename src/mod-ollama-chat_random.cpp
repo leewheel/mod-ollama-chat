@@ -144,6 +144,35 @@ void OllamaBotRandomChatter::HandleRandomChatter()
                     continue;
             }
 
+            // Apply party restriction for random chatter
+            if (g_RestrictBotsToPartyMembers)
+            {
+                Group* botGroup = bot->GetGroup();
+                if (!botGroup || (botGroup->isRaidGroup() && !botGroup->isBGGroup()))
+                {
+                    // Bot is not in a valid party, skip
+                    continue;
+                }
+                
+                // Check if there's at least one real player in the group
+                bool hasRealPlayerInParty = false;
+                for (GroupReference* ref = botGroup->GetFirstMember(); ref; ref = ref->next())
+                {
+                    Player* member = ref->GetSource();
+                    if (member && !sPlayerbotsMgr->GetPlayerbotAI(member))
+                    {
+                        hasRealPlayerInParty = true;
+                        break;
+                    }
+                }
+                
+                if (!hasRealPlayerInParty)
+                {
+                    // No real players in party, skip
+                    continue;
+                }
+            }
+
             uint64_t guid = bot->GetGUID().GetRawValue();
             processedBotsThisTick.insert(guid);
 
@@ -793,6 +822,7 @@ void OllamaBotRandomChatter::HandleRandomChatter()
                     fmt::arg("bot_zone", botZoneName),
                     fmt::arg("bot_map", botMapName),
                     fmt::arg("bot_personality", personalityPrompt),
+                    fmt::arg("bot_personality_name", personality),
                     fmt::arg("environment_info", environmentInfo)
                 );
 
@@ -842,8 +872,30 @@ void OllamaBotRandomChatter::HandleRandomChatter()
                         
                         if (hasRealPlayerInGuild)
                         {
-                            // For bots in guilds with real players, randomly choose between guild, general, or say
-                            std::vector<std::string> channels = {"Guild", "General", "Say"};
+                            // Check if there are real players nearby for non-guild channels
+                            bool hasNearbyRealPlayer = false;
+                            for (auto const& pair : ObjectAccessor::GetPlayers())
+                            {
+                                Player* player = pair.second;
+                                if (!player || !player->IsInWorld())
+                                    continue;
+                                if (sPlayerbotsMgr->GetPlayerbotAI(player))
+                                    continue;
+                                if (botPtr->GetDistance(player) <= g_RandomChatterRealPlayerDistance)
+                                {
+                                    hasNearbyRealPlayer = true;
+                                    break;
+                                }
+                            }
+                            
+                            // For bots in guilds with real players, randomly choose between available channels
+                            std::vector<std::string> channels = {"Guild"};
+                            if (hasNearbyRealPlayer)
+                            {
+                                channels.push_back("General");
+                                channels.push_back("Say");
+                            }
+                            
                             std::random_device rd;
                             std::mt19937 gen(rd());
                             std::uniform_int_distribution<size_t> dist(0, channels.size() - 1);
